@@ -228,7 +228,79 @@ ViewRootImpl 是 用户界面, 视图, View 层级的最顶部. 是让 View 和 
 		mContentParentExplicitlySet = true;
 	}
 
-首先是判断 mContentParent 是否为空, 这个 mContentParent 就是我们的 DecorView 了, 当他为空的时候, 就初始化了, 
+首先 mContentParent 是否为空则 installDecor, 这个 mContentParent 就是我们的 DecorView 了, 当他为空的时候, 就初始化了 DecorView
+
+
+
+	private void installDecor() {
+        mForceDecorInstall = false;
+        if (mDecor == null) {
+            mDecor = generateDecor(-1);
+            mDecor.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+            mDecor.setIsRootNamespace(true);
+            if (!mInvalidatePanelMenuPosted && mInvalidatePanelMenuFeatures != 0) {
+                mDecor.postOnAnimation(mInvalidatePanelMenuRunnable);
+            }
+        } else {
+            mDecor.setWindow(this);
+        }
+		if (mContentParent == null) {
+            mContentParent = generateLayout(mDecor);
+
+            // Set up decor part of UI to ignore fitsSystemWindows if appropriate.
+            mDecor.makeOptionalFitsSystemWindows();
+
+            final DecorContentParent decorContentParent = (DecorContentParent) mDecor.findViewById(
+                    R.id.decor_content_parent);
+
+            if (decorContentParent != null) {
+                mDecorContentParent = decorContentParent;
+                mDecorContentParent.setWindowCallback(getCallback());
+                if (mDecorContentParent.getTitle() == null) {
+                    mDecorContentParent.setWindowTitle(mTitle);
+                }
+
+                final int localFeatures = getLocalFeatures();
+                for (int i = 0; i < FEATURE_MAX; i++) {
+                    if ((localFeatures & (1 << i)) != 0) {
+                        mDecorContentParent.initFeature(i);
+                    }
+				}
+			}
+			...
+		}else {
+			mTitleView = findViewById(R.id.title);
+			if (mTitleView != null) {
+				if ((getLocalFeatures() & (1 << FEATURE_NO_TITLE)) != 0) {
+					final View titleContainer = findViewById(R.id.title_container);
+					if (titleContainer != null) {
+						titleContainer.setVisibility(View.GONE);
+					} else {
+						mTitleView.setVisibility(View.GONE);
+					}
+					mContentParent.setForeground(null);
+				} else {
+					mTitleView.setText(mTitle);
+				}
+			}
+        }
+		...
+		if (hasFeature(FEATURE_ACTIVITY_TRANSITIONS)) {
+			if (mTransitionManager == null) {
+				final int transitionRes = getWindowStyle().getResourceId(
+						R.styleable.Window_windowContentTransitionManager,
+						0);
+				if (transitionRes != 0) {
+					final TransitionInflater inflater = TransitionInflater.from(getContext());
+					mTransitionManager = inflater.inflateTransitionManager(transitionRes,
+							mContentParent);
+				} else {
+					mTransitionManager = new TransitionManager();
+				}
+			}
+			...
+		}
+	}
 
 
 
