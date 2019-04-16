@@ -14,22 +14,22 @@
         Android UI 层级
     
     |--------------------|
-    |	Activity         |
+    |    Activity         |
     |--------------------|
-    |	PhoneWindow      |
+    |    PhoneWindow      |
     |--------------------|
-    |	DecorView        |
+    |    DecorView        |
     |--------------------|
-    |	| ActionBar |    |
-    |	|-----------|    |
-    |	|ContentView|    |
-    |	                 |
+    |    | ActionBar |    |
+    |    |-----------|    |
+    |    |ContentView|    |
+    |                     |
     |--------------------|
     
 
 Activity 的 setContentView 方法：
 
-	public void setContentView(@LayoutRes int layoutResID) {
+    public void setContentView(@LayoutRes int layoutResID) {
         getWindow().setContentView(layoutResID);
         initWindowDecorActionBar();
     }
@@ -38,14 +38,8 @@ Activity 的 setContentView 方法：
 
 接着初始化 ActionBar 
 
-	/**
-     * Creates a new ActionBar, locates the inflated ActionBarView,
-     * initializes the ActionBar with the view, and sets mActionBar.
-     */
     private void initWindowDecorActionBar() {
         Window window = getWindow();
-        // Initializing the window decor can change window feature flags.
-        // Make sure that we have the correct set before performing the test below.
         window.getDecorView();
         if (isChild() || !window.hasFeature(Window.FEATURE_ACTION_BAR) || mActionBar != null) {
             return;
@@ -63,55 +57,25 @@ PhoneWinow 的 getDecorView 方法：
     @Override
     public final View getDecorView() {
         if (mDecor == null || mForceDecorInstall) {
-			// 初始化 DecorView , ContentParent
+            // 初始化 DecorView , ContentParent
             installDecor();
         }
         return mDecor;
     }
-	
+    
 由此可见, Activity 直接参与用户界面绘制并不多.
-	
+
 ## 二.PhoneWindow 
 
-> Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
+Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, 这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
 
 https://github.com/anggrayudi/android-hidden-api, 下载这个仓库中对应版本的.android.jar 替换 sdk\platforms\android-{version}\android.jar, 你就可以看到了.
 
-我们顺着 Activity 源码中的 getWindow().setContentView(layoutResID) 这行代码找到PhoneWindow 中的 setContentView, 在这个方法中, 
+首先我们看看 Window 是如何创建的, 下面是 ActivityThread 中的 performLaunchActivity 方法
 
-    public void setContentView(int layoutResID) {
-        if (mContentParent == null) {
-			// 初始化 DecorView 和 ViewGroup
-            installDecor();	
-        } else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
-            mContentParent.removeAllViews();
-        }
-        if (hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
-            final Scene newScene = Scene.getSceneForLayout(mContentParent, layoutResID, getContext());
-            transitionTo(newScene);
-        } else {
-			// 开始填充我们设置的 XML 布局
-            mLayoutInflater.inflate(layoutResID, mContentParent);
-        }
-        mContentParent.requestApplyInsets();
-        final Callback cb = getCallback();
-        if (cb != null && !isDestroyed()) {
-            cb.onContentChanged();
-        }
-        mContentParentExplicitlySet = true;
-    }
-	
-阅读上面代码可知, mContentParent 就是装载我们所有内容的根容器(ViewGroup)了.
-
-installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化了比如标题,icon, logo, 是否全屏等该 window 的一些基础属性, 这些属性我们都可以在 style 中定义, 例如 WindowNoTitle, 设置该 Activity 没有标题.
-
-事实上, Activity, Dialog, Toast, PopupWindow 都对应着一个 Window.
-
-我们再来看看 Window 是如何创建的, 下面是 ActivityThread 中的 performLaunchActivity 方法
-
-	private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
-		...
-		ContextImpl appContext = createBaseContextForActivity(r);
+    private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
+        ...
+        ContextImpl appContext = createBaseContextForActivity(r);
         Activity activity = null;
         try {
             java.lang.ClassLoader cl = appContext.getClassLoader();
@@ -121,11 +85,11 @@ installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化�
         } catch (Exception e) {
             ...
         }
-		try {
+        try {
             Application app = r.packageInfo.makeApplication(false, mInstrumentation);
-			...
+            ...
             if (activity != null) {
-				...
+                ...
                 Window window = null;
                 if (r.mPendingRemoveWindow != null && r.mPreserveWindow) {
                     window = r.mPendingRemoveWindow;
@@ -144,32 +108,28 @@ installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化�
                 } else {
                     mInstrumentation.callActivityOnCreate(activity, r.state);
                 }
-				...
-			}
-		} catch (SuperNotCalledException e) {
+                ...
+            }
+        } catch (SuperNotCalledException e) {
             throw e;
         } catch (Exception e) {
-			...
-		}
-		return activity;
-	}
+            ...
+        }
+        return activity;
+    }
 
 根据该方法的名字可以得知, 这个方法是用于运行一个 Activity 的, 在这个方法中, 初始化了 Activity, 比如 Context, theme, PackageInfo 等, 调用了 Activity 的　onCreate 方法.
 其中 activity = mInstrumentation.newActivity 这句代码实例化了一个新的 Activity,  activity.attach 这句代码实例化了 PhoneWindow 关联了 Context, 主线程等等.
 
 Activity.attach
 
-	final void attach(Context context, ActivityThread aThread,
-            Instrumentation instr, IBinder token, int ident,
-            Application application, Intent intent, ActivityInfo info,
-            CharSequence title, Activity parent, String id,
-            NonConfigurationInstances lastNonConfigurationInstances,
-            Configuration config, String referrer, IVoiceInteractor voiceInteractor,
+    final void attach(Context context, ActivityThread aThread,
+			...
             Window window, ActivityConfigCallback activityConfigCallback) {
         attachBaseContext(context);
-		
+        
         mFragments.attachHost(null /*parent*/);
-		
+        
         mWindow = new PhoneWindow(this, window, activityConfigCallback);
         mWindow.setWindowControllerCallback(this);
         mWindow.setCallback(this);
@@ -182,9 +142,9 @@ Activity.attach
             mWindow.setUiOptions(info.uiOptions);
         }
         mUiThread = Thread.currentThread();
-		
+        
         ...
-		
+        
         mWindow.setWindowManager(
                 (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),
                 mToken, mComponent.flattenToString(),
@@ -200,39 +160,50 @@ Activity.attach
 
 这就很清晰了, 在这初始化了 PhoneWindow 和 WindowManager, 并且关联到该 Activity, 在 ActivityThread 初始化完 Activity 后, 就调用 Activity 的 onCreate 方法了.
 
+我们顺着 Activity 源码中的 getWindow().setContentView(layoutResID) 这行代码找到PhoneWindow 中的 setContentView, 在这个方法中, 
+
+    public void setContentView(int layoutResID) {
+        if (mContentParent == null) {
+            // 初始化 DecorView 和 ViewGroup
+            installDecor();    
+        } else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+		    //如果没有过渡动画, 并且已经创建过 DecorView
+            mContentParent.removeAllViews();
+        }
+        if (hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+		// 场景转换(过渡动画)
+            final Scene newScene = Scene.getSceneForLayout(mContentParent, layoutResID, getContext());
+            transitionTo(newScene);
+        } else {
+            // 开始填充我们设置的 XML 布局, 容器为 mContentParent
+            mLayoutInflater.inflate(layoutResID, mContentParent);
+        }
+        mContentParent.requestApplyInsets();
+        final Callback cb = getCallback();
+        if (cb != null && !isDestroyed()) {
+            cb.onContentChanged();
+        }
+        mContentParentExplicitlySet = true;
+    }
+    
+阅读上面代码可知, mContentParent 就是装载我们所有内容的根容器(ViewGroup)了.
+
+installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化了比如标题,icon, logo, 是否全屏等该 window 的一些基础属性, 这些属性我们都可以在 style 中定义, 例如 WindowNoTitle, 设置该 Activity 没有标题.
+
+
+事实上, Activity, Dialog, Toast, PopupWindow 都对应着一个 Window.
+
 ## 三. DecorView 和 ViewRootImpl
 
-ViewRootImpl 是 用户界面, 视图, View 层级的最顶部. 是让 View 和 WindowManager 沟通的桥梁, 
+ViewRootImpl 是 用户界面, 视图, View 层级的根, 它控制着 View 的测量和绘制. 是让 View 和 WindowManager 沟通的桥梁, 
 
-由于在 Activity 的 setContentView 方法中调用了 getWindow.setContentView, 我们看看 PhoneWindow 的 setContentView 方法, 这个方法中初始化了 DecorView
+DecorView 是承载视图的根布局, 它继承于 FrameLayout, 可以通过Window.getDecorView() 获取它
 
-	public void setContentView(int layoutResID) {
-		if (mContentParent == null) {
-			installDecor();
-		} else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
-			mContentParent.removeAllViews();
-		}
+由于在 PhoneWindow.setContentView 这个方法中初始化了 DecorView, 看看
 
-		if (hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
-			final Scene newScene = Scene.getSceneForLayout(mContentParent, layoutResID,
-					getContext());
-			transitionTo(newScene);
-		} else {
-			mLayoutInflater.inflate(layoutResID, mContentParent);
-		}
-		mContentParent.requestApplyInsets();
-		final Callback cb = getCallback();
-		if (cb != null && !isDestroyed()) {
-			cb.onContentChanged();
-		}
-		mContentParentExplicitlySet = true;
-	}
+PhoneWindow.installDecor()
 
-首先 mContentParent 是否为空则 installDecor, 这个 mContentParent 就是我们的 DecorView 了, 当他为空的时候, 就初始化了 DecorView
-
-
-
-	private void installDecor() {
+    private void installDecor() {
         mForceDecorInstall = false;
         if (mDecor == null) {
             mDecor = generateDecor(-1);
@@ -244,7 +215,7 @@ ViewRootImpl 是 用户界面, 视图, View 层级的最顶部. 是让 View 和 
         } else {
             mDecor.setWindow(this);
         }
-		if (mContentParent == null) {
+        if (mContentParent == null) {
             mContentParent = generateLayout(mDecor);
 
             // Set up decor part of UI to ignore fitsSystemWindows if appropriate.
@@ -265,42 +236,44 @@ ViewRootImpl 是 用户界面, 视图, View 层级的最顶部. 是让 View 和 
                     if ((localFeatures & (1 << i)) != 0) {
                         mDecorContentParent.initFeature(i);
                     }
-				}
-			}
-			...
-		}else {
-			mTitleView = findViewById(R.id.title);
-			if (mTitleView != null) {
-				if ((getLocalFeatures() & (1 << FEATURE_NO_TITLE)) != 0) {
-					final View titleContainer = findViewById(R.id.title_container);
-					if (titleContainer != null) {
-						titleContainer.setVisibility(View.GONE);
-					} else {
-						mTitleView.setVisibility(View.GONE);
-					}
-					mContentParent.setForeground(null);
-				} else {
-					mTitleView.setText(mTitle);
-				}
-			}
+                }
+            }
+            ...
+        }else {
+            mTitleView = findViewById(R.id.title);
+            if (mTitleView != null) {
+                if ((getLocalFeatures() & (1 << FEATURE_NO_TITLE)) != 0) {
+                    final View titleContainer = findViewById(R.id.title_container);
+                    if (titleContainer != null) {
+                        titleContainer.setVisibility(View.GONE);
+                    } else {
+                        mTitleView.setVisibility(View.GONE);
+                    }
+                    mContentParent.setForeground(null);
+                } else {
+                    mTitleView.setText(mTitle);
+                }
+            }
         }
-		...
-		if (hasFeature(FEATURE_ACTIVITY_TRANSITIONS)) {
-			if (mTransitionManager == null) {
-				final int transitionRes = getWindowStyle().getResourceId(
-						R.styleable.Window_windowContentTransitionManager,
-						0);
-				if (transitionRes != 0) {
-					final TransitionInflater inflater = TransitionInflater.from(getContext());
-					mTransitionManager = inflater.inflateTransitionManager(transitionRes,
-							mContentParent);
-				} else {
-					mTransitionManager = new TransitionManager();
-				}
-			}
-			...
-		}
-	}
+        ...
+        if (hasFeature(FEATURE_ACTIVITY_TRANSITIONS)) {
+            if (mTransitionManager == null) {
+                final int transitionRes = getWindowStyle().getResourceId(
+                        R.styleable.Window_windowContentTransitionManager,
+                        0);
+                if (transitionRes != 0) {
+                    final TransitionInflater inflater = TransitionInflater.from(getContext());
+                    mTransitionManager = inflater.inflateTransitionManager(transitionRes,
+                            mContentParent);
+                } else {
+                    mTransitionManager = new TransitionManager();
+                }
+            }
+            ...
+        }
+    }
+
+阅读这个方法的代码, 了解到在这个方法中生成了 DecorView, mContentParent, 设置了 Window 标题, 初始化了动画等等..
 
 
 
@@ -327,4 +300,4 @@ ViewRootImpl 是 用户界面, 视图, View 层级的最顶部. 是让 View 和 
 
 
 
-	
+    
