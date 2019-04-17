@@ -67,20 +67,23 @@ PhoneWinow 的 getDecorView 方法：
 
 ## 二.PhoneWindow 
 
-Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, 这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
+Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, Window 并不具备 View 的一些特性, 比如可见, 长宽高这些, 它只是用来描述一个窗口的工具, 以及一些特性.
+
+这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
 
 https://github.com/anggrayudi/android-hidden-api, 下载这个仓库中对应版本的.android.jar 替换 sdk\platforms\android-{version}\android.jar, 你就可以看到了.
 
-首先我们看看 Window 是如何创建的, 下面是 ActivityThread 中的 performLaunchActivity 方法
+PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 Activity 的创建, 我们看看 Window 是如何创建并与 Activity 关联的, 下面是 ActivityThread 中的 performLaunchActivity 方法
 
     private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
         ...
+		// 创建 Activity 的上下文
         ContextImpl appContext = createBaseContextForActivity(r);
         Activity activity = null;
         try {
             java.lang.ClassLoader cl = appContext.getClassLoader();
-            activity = mInstrumentation.newActivity(
-                    cl, component.getClassName(), r.intent);
+			// Activity 创建了
+            activity = mInstrumentation.newActivity(cl, component.getClassName(), r.intent);
             ...
         } catch (Exception e) {
             ...
@@ -92,11 +95,13 @@ https://github.com/anggrayudi/android-hidden-api, 下载这个仓库中对应版
                 ...
                 Window window = null;
                 if (r.mPendingRemoveWindow != null && r.mPreserveWindow) {
+					// window 创建了
                     window = r.mPendingRemoveWindow;
                     r.mPendingRemoveWindow = null;
                     r.mPendingRemoveWindowManager = null;
                 }
                 appContext.setOuterContext(activity);
+				// 初始化 Activity 相关的内容, Activity 的这个方法中关联了 window 
                 activity.attach(appContext, this, getInstrumentation(), r.token,
                         r.ident, app, r.intent, r.activityInfo, title, r.parent,
                         r.embeddedID, r.lastNonConfigurationInstances, config,
@@ -190,8 +195,7 @@ Activity.attach
 
 installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化了比如标题,icon, logo, 是否全屏等该 window 的一些基础属性, 这些属性我们都可以在 style 中定义, 例如 WindowNoTitle, 设置该 Activity 没有标题.
 
-
-事实上, Activity, Dialog, Toast, PopupWindow 都对应着一个 Window.
+事实上,不止 Activity, 还有 Dialog, Toast, PopupWindow 都对应着一个 Window.
 
 ## 三. DecorView 和 ViewRootImpl
 
@@ -199,7 +203,7 @@ ViewRootImpl 是 用户界面, 视图, View 层级的根, 它控制着 View 的�
 
 DecorView 是承载视图的根布局, 它继承于 FrameLayout, 可以通过Window.getDecorView() 获取它
 
-由于在 PhoneWindow.setContentView 这个方法中初始化了 DecorView, 看看
+由于在 PhoneWindow.setContentView 这个方法中初始化了 DecorView, 粗略看看
 
 PhoneWindow.installDecor()
 
@@ -217,20 +221,16 @@ PhoneWindow.installDecor()
         }
         if (mContentParent == null) {
             mContentParent = generateLayout(mDecor);
-
             // Set up decor part of UI to ignore fitsSystemWindows if appropriate.
             mDecor.makeOptionalFitsSystemWindows();
-
             final DecorContentParent decorContentParent = (DecorContentParent) mDecor.findViewById(
                     R.id.decor_content_parent);
-
             if (decorContentParent != null) {
                 mDecorContentParent = decorContentParent;
                 mDecorContentParent.setWindowCallback(getCallback());
                 if (mDecorContentParent.getTitle() == null) {
                     mDecorContentParent.setWindowTitle(mTitle);
                 }
-
                 final int localFeatures = getLocalFeatures();
                 for (int i = 0; i < FEATURE_MAX; i++) {
                     if ((localFeatures & (1 << i)) != 0) {
@@ -273,9 +273,11 @@ PhoneWindow.installDecor()
         }
     }
 
-阅读这个方法的代码, 了解到在这个方法中生成了 DecorView, mContentParent, 设置了 Window 标题, 初始化了动画等等..
+阅读这个方法的代码, 了解到在这个方法中生成了 DecorView, mContentParent, 设置了 Window 标题, 设置了背景色前景色, 初始化了动画等等重要操作...
 
+在 installDecor 这个方法中设置的很多 window 相关的属性, 我们都可以在 styles 的主题中配置, 比如我们非常常用的 windowActionBar 设置一个 Activity 是否隐藏 ActionBar, 还有 windowTranslucentStatus 等等.
 
+当我们阅读到相关代码之后, 我们就明白了之中的关联和逻辑, 脑袋中形成一个清晰的流程, 我们再要用到这些知识的时候就会得心应手.
 
 
 
