@@ -67,9 +67,10 @@ PhoneWinow 的 getDecorView 方法：
 
 ## 二.PhoneWindow 
 
-Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, Window 并不具备 View 的一些特性, 比如可见, 长宽高这些, 它只是用来描述一个窗口的工具, 以及一些特性.
+Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, Window 并不具备 View 的一些特性, 比如可见, 长宽高这些. 正如它的类名, 它代表着 App 中一个窗口的抽象, 它控制着一些和窗口相关的操作, 和包含着
+一些窗口的属性, 比如, 过度动画的绘制, 管理菜单, 标题, 以及它拥有的一个重要成员变量 DecorView.
 
-这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
+PhoneWindow 这个类位于 com.android.internal 包下, 这个包中的类我们的 SDK 是没有的, 所以就算你下载了相应的 SDK 源码也看不到 PhoneWindow 的代码.
 
 https://github.com/anggrayudi/android-hidden-api, 下载这个仓库中对应版本的.android.jar 替换 sdk\platforms\android-{version}\android.jar, 你就可以看到了.
 
@@ -169,7 +170,7 @@ Activity.attach
 
     public void setContentView(int layoutResID) {
         if (mContentParent == null) {
-            // 初始化 DecorView 和 ViewGroup
+            // 初始化 DecorView
             installDecor();    
         } else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
 		    //如果没有过渡动画, 并且已经创建过 DecorView
@@ -191,11 +192,11 @@ Activity.attach
         mContentParentExplicitlySet = true;
     }
     
-阅读上面代码可知, mContentParent 就是装载我们所有内容的根容器(ViewGroup)了.
+阅读上面代码可知, mContentParent 就是装载我们所有内容的根容器(ViewGroup)了. 在这里, 最关键的代码就是 mLayoutInflater.inflate(layoutResID, mContentParent) , 它就是填充我们的布局的代码了.
 
 installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化了比如标题,icon, logo, 是否全屏等该 window 的一些基础属性, 这些属性我们都可以在 style 中定义, 例如 WindowNoTitle, 设置该 Activity 没有标题.
 
-事实上,不止 Activity, 还有 Dialog, Toast, PopupWindow 都对应着一个 Window.
+事实上,不止 Activity, 还有 Dialog, Toast 都对应着一个 Window.
 
 ## 三. DecorView 和 ViewRootImpl
 
@@ -210,6 +211,7 @@ PhoneWindow.installDecor()
     private void installDecor() {
         mForceDecorInstall = false;
         if (mDecor == null) {
+			// 这里生成了 DecorView
             mDecor = generateDecor(-1);
             mDecor.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
             mDecor.setIsRootNamespace(true);
@@ -220,6 +222,7 @@ PhoneWindow.installDecor()
             mDecor.setWindow(this);
         }
         if (mContentParent == null) {
+			// 生成 Window 的容器
             mContentParent = generateLayout(mDecor);
             // Set up decor part of UI to ignore fitsSystemWindows if appropriate.
             mDecor.makeOptionalFitsSystemWindows();
@@ -273,7 +276,7 @@ PhoneWindow.installDecor()
         }
     }
 
-阅读这个方法的代码, 了解到在这个方法中生成了 DecorView, mContentParent, 设置了 Window 标题, 设置了背景色前景色, 初始化了动画等等重要操作...
+阅读这个方法的代码, 了解到在这个方法中生成了 DecorView, 设置了 Window 标题, 设置了背景色前景色, 初始化了动画等等重要操作...
 
 在 installDecor 这个方法中设置的很多 window 相关的属性, 我们都可以在 styles 的主题中配置, 比如我们非常常用的 windowActionBar 设置一个 Activity 是否隐藏 ActionBar, 还有 windowTranslucentStatus 等等.
 
