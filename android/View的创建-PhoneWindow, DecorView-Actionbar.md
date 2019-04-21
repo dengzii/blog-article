@@ -62,7 +62,7 @@
         }
         return mDecor;
     }
-    
+
 由此可见, Activity 直接参与用户界面绘制并不多.
 
 ## 二.PhoneWindow 
@@ -204,7 +204,7 @@ installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化�
 
 ## 三. PhoneWindow 中的 DecorView
 ---
-DecorView 是承载视图的根布局, 它继承于 FrameLayout, 可以通过Window.getDecorView() 获取它
+DecorView 是承载视图的根布局, 它继承于 FrameLayout, 是 PhoneWindow 的一个成员变量, 因此可以通过 Window.getDecorView() 获取它.
 
 由于在 PhoneWindow.setContentView 这个方法中初始化了 DecorView, 粗略看看
 
@@ -224,7 +224,7 @@ DecorView 是承载视图的根布局, 它继承于 FrameLayout, 可以通过Win
             mDecor.setWindow(this);
         }
         if (mContentParent == null) {
-			// 生成 Window 的容器
+			// 生成装载我们的布局的容器
             mContentParent = generateLayout(mDecor);
             // Set up decor part of UI to ignore fitsSystemWindows if appropriate.
             mDecor.makeOptionalFitsSystemWindows();
@@ -322,23 +322,38 @@ DocorView 中还有 ActionBar , 再看看他是如何成的, 我们之前分析�
 
 注释很清楚, 创建一个新的 ActionBar, 定位已填充的 ActionBarView, 初始化并设置 ActionBar, 其中, getDecorView 方法是为了保证 DecorView 已创建, 之前也追踪过相关代码.
 
-*WindowDecorActionBar 的构造方法*
+*WindowDecorActionBar 的构造方法 和 init 方法*
 
     public WindowDecorActionBar(Activity activity) {
-        mActivity = activity;
-        Window window = activity.getWindow();
-        View decor = window.getDecorView();
-        boolean overlayMode = mActivity.getWindow().hasFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+		...
         init(decor);
-        if (!overlayMode) {
-            mContentView = decor.findViewById(android.R.id.content);
-        }
+		...
     }
+	
+	private void init(View decor) {
+		...
+		// 这个就是我们的 ActionBar 的布局了
+        mDecorToolbar = getDecorToolbar(decor.findViewById(com.android.internal.R.id.action_bar));
+        mContextView = (ActionBarContextView) decor.findViewById(
+                com.android.internal.R.id.action_context_bar);
+        mContainerView = (ActionBarContainer) decor.findViewById(
+                com.android.internal.R.id.action_bar_container);
+        mSplitView = (ActionBarContainer) decor.findViewById(
+                com.android.internal.R.id.split_action_bar);
+		...
+	}
 
-### DecorView
+在这个 init 方法中, 
 
+## 总结
 
+-1. 在 ActivityThread 的 performLaunchActivity 中, 创建了 PhoneWindow 并调用了 Activity 的 attach 方法
+-2. 在 Activity 的 attach 方法中, 关联了 PhoneWindow
+-3. 在 Activity 的 setContentView 方法中 获取了 PhoneWindow , 并将 layoutResID 传入 PhoneWindow 的 setContentView 中
+-4. 在 PhoneWindow 的 setContentView 中, 初始化了 DecorView, 并且将我们的布局加载到 DecorView 中的 mContentParent 中
+-5. 在 Activity 的 initWindowDecorActionBar 中, 初始化了 ActionBar
 
+(完)
 
 
 
