@@ -346,12 +346,13 @@ DocorView 中还有 ActionBar , 再看看他是如何成的, 我们之前分析�
 在这个 init 方法中, 
 
 ## 总结
+---
 
--1. 在 ActivityThread 的 performLaunchActivity 中, 创建了 PhoneWindow 并调用了 Activity 的 attach 方法
--2. 在 Activity 的 attach 方法中, 关联了 PhoneWindow
--3. 在 Activity 的 setContentView 方法中 获取了 PhoneWindow , 并将 layoutResID 传入 PhoneWindow 的 setContentView 中
--4. 在 PhoneWindow 的 setContentView 中, 初始化了 DecorView, 并且将我们的布局加载到 DecorView 中的 mContentParent 中
--5. 在 Activity 的 initWindowDecorActionBar 中, 初始化了 ActionBar
++ 1,在 ActivityThread 的 performLaunchActivity 中, 创建了 PhoneWindow 并调用了 Activity 的 attach 方法
++ 2,在 Activity 的 attach 方法中, 关联了 PhoneWindow
++ 3,在 Activity 的 setContentView 方法中 获取了 PhoneWindow , 并将 layoutResID 传入 PhoneWindow 的 setContentView 中
++ 4,在 PhoneWindow 的 setContentView 中, 初始化了 DecorView, 并且将我们的布局加载到 DecorView 中的 mContentParent 中
++ 5,在 Activity 的 initWindowDecorActionBar 中, 初始化了 ActionBar
 
 (完)
 
