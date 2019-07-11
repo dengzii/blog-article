@@ -1,7 +1,7 @@
 
 在 Android App中, 所有的数据内容都是通过 View 展示给用户的, Android 通过一系列机制和流程将这些承载着各种交互控件和展示数据的 View 展示出来. 
 在开发中, 我们也经常需要用到自定义 view, 因此, 我们非常有必要学习一下 view 的创建流程, 
-本文从源码出发, 循序渐进介绍了了 Activity, PhoneWindow, DecorView, View 和 ViewGroup 的关系, 是如何一步步绘制最终展示出来的, 重点介绍了 View 的 measure, layout, draw 这几个方法. 
+本文从源码出发, 循序渐进介绍了了 Activity, PhoneWindow, DecorView 的关系, 是如何一一步步创建关联的.
 
 ## 一. Activity
 ---
