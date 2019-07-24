@@ -89,11 +89,47 @@ Ok, 现在基本已经配置好了.
 
 ![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
 
-在这个界面就是配置项目
+在这个界面就是配置项目, 下面我们添加一个 GitHub 仓库, **源码管理 >> Git** 按照下图添加一个仓库添加一个凭据, 凭据类型为 Username with password, 然后填入你的 GitHub 用户名密码,
+最好也填一下, 然后就能在凭据下拉框中找到配置的账号密码了, Jenkins 将通过这个账号密码拉取配置仓库的代码.
 
-## Gradle 与 Jenkins 的结合
+在下图中 **Branches to build** 字段指定了哪个分支会被构建, 默认为 master 分支.
 
-## 实际应用
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+在构建触发器这块中, 我们可以配置如何出发构建, 比如访问某个链接, 提交代码到某个分支.
+
+接着, 我们在构建中选择 **增加构建步骤 >> Invoke Gradle script**, 这就是调用 gradle 构建项目的步骤了, 选择我们之前配置的 gradle 版本, 然后 输入要运行的 **task**, 先 clean 之前的构建缓存, 然后执行 app 模块的 assemblRelease task, 构建所有的 release apk.
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个页面, 点击 **Build Now** 开始构建．在**Build History** 列表中, 最上面的就是了.
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+点击这个构建任务我们就可以进入到这个任务的详细情况了, 更变记录中有所有所有的提交记录(你构建分支的), 控制台输出就是本次构建执行的所有命令了
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+控制台log, 
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+在这里可以看到所有执行的命令和输出. 我们可以把命令在 cmd 中运行, 这对快速排查错误很有帮助, 比如 gradle 报错, 我们可以将下面这句命令在项目根目录中运行, 排查错误
+
+    cmd.exe /C "D:\AndroidStudio\gradle\gradle-5.1.1\bin\gradle.bat :clean app:assembleRelease && exit %%ERRORLEVEL%%"
+
+## Gradle 与 Jenkins 的结合, 实际应用
+
+在上面的例子中, 我们只是简单的配置了, 并运行了一个最基础了构建. 下面我们配置一些更加实用的功能.
+
+### APK 归档
+
+### 参数化构建过程, 如何传递给 Gradle
+
+### 配置构建通知
+
 
 
 
