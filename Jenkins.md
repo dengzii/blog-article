@@ -126,13 +126,101 @@ OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个
 
 ### APK 归档
 
+我们构建完项目是不够的, 还需要把 APK 归档才行, 不然还得去项目目录下找, 打开项目配置, 在**构建后的操作** 一栏中, 增加一个构建后的步骤, 选择 **Archive the artifacts**, 如果我们没有
+配置gradle 的 apk 输出路径, 那默认的就是 app/build/outputs/apk/**/*.apk, 如下图配置
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+其中, \*\*表示任意目录, \*.apk 代表以.apk 结尾的任意文件, 配置这个选项后, 每次构建成功后, Jeknins 都会将和你输入的规则相匹配的文件归档到构建结果中, 如下图
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+我们将可以在这里下载到打包好的 apk 文件
+
 ### 参数化构建过程, 如何传递给 Gradle
 
-### 配置构建通知
+参数化构建过程可以在 Jenkins 中将参数传递给 Gradle, 就和我们在 gradle.properties 中配置属性一样, 然后我们可以在 gradle 脚本中再通过参数进行构建的步骤进行配置,
 
+比如, 我们可以指定构建类型, debug 或 release, 指定风味, 等等
 
+进入项目的配置页面, 在 **General** 栏中勾选 **This project is parameterized** , 表示这个项目是参数化的, 我们需要在 Jeknins 中吧参数传给项目构建脚本.
 
+点击添加参数, 选择我们需要的参数类型, 其中 列表, 用换行表示列表项, 还可以给字段添加描述. 
 
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
 
+之后, 我们还需要在 **构建** 栏中配置 gradle , 点击 **Invoke gradle script** 的 **高级** 勾选 **Pass all job parameters as Project properties** ,
 
+表示传递构建任务的参数作为项目参数, 也就是我们刚刚在 **This project is parameterized** 中配置的参数, 我们还可以在 **Project properties** 中配置属性, 但是在这里配置的是固定的, 
 
+不能在每次发起构建时选择参数值.
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+OK, 配置完后, 进入我们的项目详情页面, **Build Now** 按钮变成了 **Build with Parameters**, 点击后就不是马上构建而是让我们选择我们在配置中添加的参数, 在其他情况触发构建时(比如Git提交触发), 我们没法选择参数, 那 Jeknins 将使用默认值, 列表选择第一个值, 没有默认值的则为空.
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+
+然后, 我们就可以在 gradle 中使用这些参数了例如指定版本号和版本名
+	
+     defaultConfig {
+        applicationId "com.example.jenkins"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode VERSION_CODE
+        versionName VERSION_NAME
+	}
+
+同时, 我们还需要在 gradle.properties 中配置相应的属性, 因为我们不用 Jeknins 构建时, gradle 找不到这些参数会报错, 或者我们将 CI 脚本与平时编码的分开, 或新建一个分支用于构建
+
+通过参数配置风味和构建类型, 在这里, 我们将版本名和版本号统一配置在了 ext 中, 然后通过 IS_JENKINS 判断是否为 jenkins 构建, 修改相应的值
+
+	IS_JENKINS = Boolean.valueOf(IS_JENKINS)
+
+	task jenkinsBuild (type:GradleBuild){
+
+		if (!IS_JENKINS){
+			return
+		}
+		rootProject.ext.versionCode = Integer.valueOf(VERSION_CODE)
+		rootProject.ext.versionName = VERSION_NAME
+		def flavors = BUILD_FLAVOR.trim().split("_")
+		def allTasks = []
+		flavors.each {
+			def taskName = "assemble${it.capitalize()}${BUILD_TYPE.capitalize()}".toString()
+			if (!allTasks.contains(taskName)){
+				allTasks.add taskName
+			}
+		}
+		println("""
+		============= Build Info =============
+		build tasks      :  $allTasks
+		build versionName:  $rootProject.ext.versionName
+		build versionCode:  $rootProject.ext.versionCode
+		============= Build Info END =============
+		""")
+
+		tasks = allTasks
+	}
+
+到此为止, 参数化构建过程完毕. 如果我们开始构建后, 在控制台中能看到如下输出, 说明我们的配置生效了
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+
+### 配置 钉钉 构建通知
+
+在钉钉群中, 进入 **群设置 >> 群机器人 >> 添加机器人 >> 添加自定义机器人 >> 配置** , 添加好后, 在机器人管理中选择添加的机器人, 保存在 webhook 中链接中的 access_token= 后的参数
+
+进入 Jeknins, 在 **插件管理** 中搜索到 [Dingding JSON Pusher](https://plugins.jenkins.io/dingding-json-pusher) 并安装, 安装完后打开项目配置, 在 **构建后操作** 一栏中, 增加构建后的步骤, 
+
+进入项目管理, 选择 **钉钉通知器配置** , 参考下图配置, 钉钉access token就填入我们申请的
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+
+好了, 每次构建时都将在 钉钉中收到通知了
+
+![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+
+点击卡片便可进入我们的构建详情中
+
+(完)
