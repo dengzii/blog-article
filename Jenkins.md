@@ -57,7 +57,7 @@ Jenkins是一个开源的、可扩展的持续集成、交付、部署（软件/
 
 这里配置了一个 css url: [http://afonsof.com/jenkins-material-theme/dist/material-light.css](http://afonsof.com/jenkins-material-theme/dist/material-light.css)
 
-[![jenkins][jenkins]](https://github.com/MrDenua/blog)
+![jenkins][jenkins]
 
 ### 安装插件
 
@@ -82,15 +82,15 @@ Jenkins是一个开源的、可扩展的持续集成、交付、部署（软件/
 
 进入**Manage Jenkins => Configure System**, 参考下图配置 ANDROID_SDK 环境变, 具体值根据你的sdk路径设置, 但是必须三个键都要有且键名必须一样.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![android_sdk][android_sdk]
 
 进入 **Manage Jenkins => Global Tool Configuration**, 参考下图配置 JDK 和 Git, 这两个都是根据具体安装路径来配置, 我这直接 配置 git.exe 是因为我将 git 配置到 Windows 的环境变量里了, 在命令行直接可以使用 git 命令
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![jdk_git][jdk_git]
 
 配置 gradle, name 最好取得有意义
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![gradle][gradle]
 
 Ok, 现在基本已经配置好了.
 
@@ -98,34 +98,34 @@ Ok, 现在基本已经配置好了.
 
 进入 Jenkins 的首页, 点击 **新建Item**, 输入项目名称, 点击 **FreeStyle Project** 新建一个自由风格的项目, 然后点击创建, 可以看到如下界面
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![test_project][test_project]
 
 在这个界面就是配置项目, 下面我们添加一个 GitHub 仓库, **源码管理 >> Git** 按照下图添加一个仓库添加一个凭据, 凭据类型为 Username with password, 然后填入你的 GitHub 用户名密码,
 最好也填一下, 然后就能在凭据下拉框中找到配置的账号密码了, Jenkins 将通过这个账号密码拉取配置仓库的代码.
 
 在下图中 **Branches to build** 字段指定了哪个分支会被构建, 默认为 master 分支.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![repository][repository]
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![git_password][git_password]
 
 在构建触发器这块中, 我们可以配置如何出发构建, 比如访问某个链接, 提交代码到某个分支.
 
 接着, 我们在构建中选择 **增加构建步骤 >> Invoke Gradle script**, 这就是调用 gradle 构建项目的步骤了, 选择我们之前配置的 gradle 版本, 然后 输入要运行的 **task**, 先 clean 之前的构建缓存, 然后执行 app 模块的 assemblRelease task, 构建所有的 release apk.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![invoke_gradle][invoke_gradle]
 
 OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个页面, 点击 **Build Now** 开始构建．在**Build History** 列表中, 最上面的就是了.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![building][building]
 
 点击这个构建任务我们就可以进入到这个任务的详细情况了, 更变记录中有所有所有的提交记录(你构建分支的), 控制台输出就是本次构建执行的所有命令了
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![build_detail][build_detail]
 
 控制台log, 
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![log][log]
 
 在这里可以看到所有执行的命令和输出. 我们可以把命令在 cmd 中运行, 这对快速排查错误很有帮助, 比如 gradle 报错, 我们可以将下面这句命令在项目根目录中运行, 排查错误
 
@@ -140,11 +140,11 @@ OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个
 我们构建完项目是不够的, 还需要把 APK 归档才行, 不然还得去项目目录下找, 打开项目配置, 在**构建后的操作** 一栏中, 增加一个构建后的步骤, 选择 **Archive the artifacts**, 如果我们没有
 配置gradle 的 apk 输出路径, 那默认的就是 app/build/outputs/apk/**/*.apk, 如下图配置
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![archive_artifacts][archive_artifacts]
 
 其中, \*\*表示任意目录, \*.apk 代表以.apk 结尾的任意文件, 配置这个选项后, 每次构建成功后, Jeknins 都会将和你输入的规则相匹配的文件归档到构建结果中, 如下图
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![build_result][build_result]
 
 我们将可以在这里下载到打包好的 apk 文件
 
@@ -158,7 +158,7 @@ OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个
 
 点击添加参数, 选择我们需要的参数类型, 其中 列表, 用换行表示列表项, 还可以给字段添加描述. 
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![parameterized][parameterized]
 
 之后, 我们还需要在 **构建** 栏中配置 gradle , 点击 **Invoke gradle script** 的 **高级** 勾选 **Pass all job parameters as Project properties** ,
 
@@ -166,11 +166,11 @@ OK, 一个最基本的配置就好了, 保存, 进入到 job/TestProject/ 这个
 
 不能在每次发起构建时选择参数值.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![gradle_properties][gradle_properties]
 
 OK, 配置完后, 进入我们的项目详情页面, **Build Now** 按钮变成了 **Build with Parameters**, 点击后就不是马上构建而是让我们选择我们在配置中添加的参数, 在其他情况触发构建时(比如Git提交触发), 我们没法选择参数, 那 Jeknins 将使用默认值, 列表选择第一个值, 没有默认值的则为空.
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+![build_parameters][build_parameters]
 
 然后, 我们就可以在 gradle 中使用这些参数了例如指定版本号和版本名
 	
@@ -216,7 +216,7 @@ OK, 配置完后, 进入我们的项目详情页面, **Build Now** 按钮变成�
 
 到此为止, 参数化构建过程完毕. 如果我们开始构建后, 在控制台中能看到如下输出, 说明我们的配置生效了
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+![parameter_log][parameter_log]
 
 ### 配置 钉钉 构建通知
 
@@ -226,12 +226,53 @@ OK, 配置完后, 进入我们的项目详情页面, **Build Now** 按钮变成�
 
 进入项目管理, 选择 **钉钉通知器配置** , 参考下图配置, 钉钉access token就填入我们申请的
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+![dingding][dingding]
 
 好了, 每次构建时都将在 钉钉中收到通知了
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)	
+![dingding_notify][dingding_notify]
 
 点击卡片便可进入我们的构建详情中
 
 (完)
+
+[jenkins]: https://raw.githubusercontent.com/MrDenua/blog/master/art/jenkins.png
+
+[android_sdk]: https://raw.githubusercontent.com/MrDenua/blog/master/art/android_sdk.png
+
+[archive_artifacts]: https://raw.githubusercontent.com/MrDenua/blog/master/art/archive_artifacts.png
+
+[build_detail]: https://raw.githubusercontent.com/MrDenua/blog/master/art/build_detail.png
+
+[build_parameters]: https://raw.githubusercontent.com/MrDenua/blog/master/art/build_parameters.png
+
+[build_result]: https://raw.githubusercontent.com/MrDenua/blog/master/art/build_result.png
+
+[building]: https://raw.githubusercontent.com/MrDenua/blog/master/art/building.png 
+
+[dingding]: https://raw.githubusercontent.com/MrDenua/blog/master/art/dingding.png
+
+[dingding_notify]: https://raw.githubusercontent.com/MrDenua/blog/master/art/dingding_notify.png
+
+[git_password]: https://raw.githubusercontent.com/MrDenua/blog/master/art/git_password.png
+
+[gradle]: https://raw.githubusercontent.com/MrDenua/blog/master/art/gradle.png
+
+[gradle_properties]: https://raw.githubusercontent.com/MrDenua/blog/master/art/gradle_properties.png
+
+[invoke_gradle]: https://raw.githubusercontent.com/MrDenua/blog/master/art/invoke_gradle.png
+
+[jdk_git]: https://raw.githubusercontent.com/MrDenua/blog/master/art/jdk_git.png
+
+[jenkins]: https://raw.githubusercontent.com/MrDenua/blog/master/art/jenkins.png
+
+[log]: https://raw.githubusercontent.com/MrDenua/blog/master/art/log.png
+
+[parameter_log]: https://raw.githubusercontent.com/MrDenua/blog/master/art/parameter_log.png
+
+[repository]: https://raw.githubusercontent.com/MrDenua/blog/master/art/repository.png
+
+[test_project]: https://raw.githubusercontent.com/MrDenua/blog/master/art/test_project.png
+
+
+
