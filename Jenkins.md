@@ -2,11 +2,22 @@
 
 ### 目录
 
-- 引子
-- 如何安装配置
-- 构建 Android
-- 集成 Git
-- 在 Jeknins 使用 Gradle 
+- 什么是 Jenkins , And why
++ 起因
++ Jenkins 简介
++ 其他类似持续集成工具
+
+- 基本配置 Jenkins 
++ 下载安装
++ 安装插件
++ 配置一些属性
+
+- 在 Jenkins 中用 Gradle 构建 Android 项目
+
+- Gradle 与 Jenkins 的结合, 实际应用
++ 参数化构建过程, 如何传递给 Gradle
++ APK 归档
++ 配置 钉钉 构建通知
 
 ## 什么是 Jenkins , And why
 
@@ -46,7 +57,7 @@ Jenkins是一个开源的、可扩展的持续集成、交付、部署（软件/
 
 这里配置了一个 css url: [http://afonsof.com/jenkins-material-theme/dist/material-light.css](http://afonsof.com/jenkins-material-theme/dist/material-light.css)
 
-![jenkins](https://www.baidu.com/img/dong_962301698d83dc26fa8e7b38011d1705.gif)
+[![jenkins][jenkins]](https://github.com/MrDenua/blog)
 
 ### 安装插件
 
