@@ -3,21 +3,18 @@
 ### 目录
 
 - 什么是 Jenkins , And why
-+ 起因
-+ Jenkins 简介
-+ 其他类似持续集成工具
-
+   + 起因
+   + Jenkins 简介
+   + 其他类似持续集成工具
 - 基本配置 Jenkins 
-+ 下载安装
-+ 安装插件
-+ 配置一些属性
-
-- 在 Jenkins 中用 Gradle 构建 Android 项目
-
+   + 下载安装
+   + 安装插件
+   + 配置一些属性
+- 在 Jenkins 中用 Gradle 构建 Android 项目 
 - Gradle 与 Jenkins 的结合, 实际应用
-+ 参数化构建过程, 如何传递给 Gradle
-+ APK 归档
-+ 配置 钉钉 构建通知
+   + 参数化构建过程, 如何传递给 Gradle
+   + APK 归档
+   + 配置 钉钉 构建通知
 
 ## 什么是 Jenkins , And why
 
