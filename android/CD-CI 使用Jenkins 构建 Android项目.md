@@ -269,6 +269,3 @@ OK, 配置完后, 进入我们的项目详情页面, **Build Now** 按钮变成�
 [repository]: /static/repository.png
 
 [test_project]: /static/test_project.png
-
-
-
