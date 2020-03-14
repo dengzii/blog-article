@@ -4,11 +4,12 @@ Gradle 作为一个现代的基于 JVM 构建工具, 它抛弃了 Maven 和 Ant 
 使用 Groovy DSL, 或 Kotlin DSL 来配置构建项目, 它非常强大, 高可定制, 快速, 可用于构建 Java,
 Android, C++, Kotlin, JavaScript 项目, 是 Android 官方构建工具.
 
-
 [Gradle 官方用户引导](https://gradle.org/guides/#getting-started)
 
-在这里, 我使用 Gradle 5.1 作为示例, 使用 Groovy DSL 作为例子, Groovy 非常简单, 如果你还
-没有了解过, 可以查看前往 [官方文档](http://www.groovy-lang.org/syntax.html) 进行快速学习.
+在这里, 我使用 Gradle 5.6.1 作为示例, 使用 Groovy DSL 作为例子, Groovy 非常简单, 如果你还
+没有了解过, 可以查看前往 [官方文档](http://www.groovy-lang.org/syntax.html) 进行快速学习,
+建议着重学习 **Closure (闭包)** 相关的内容, 如果想要深入了解 gradle, 那么了解**元编程**的
+知识也是必要的.
 
 ## 什么是 DSL
 
@@ -24,11 +25,10 @@ DSL 是 Domain Specific Language 的缩写, 意思是领域特定语言, 但它�
 想象一下我们用 Java 去构建 Android 项目, 原本简洁的 testImplementation 'xxx' 要替换成
  project.dependencies.test.add('xxx'), 相信你能理解.
 
-在 gradle 中, 有基于 groovy 和 kotlin 的两种形式, 在语法上有写不同, 这是由于 groovy 和 kotlin 
+在 gradle 中, 有基于 groovy dsl 和 kotlin dsl 的两种实现, 在语法上有写不同, 这是由于 groovy 和 kotlin 
 两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似.
 
-
-## Project 和 Task 的基本概念
+## Task 的基本概念
 
 在 Gradle 中, 所有概念都建立在 project 和 task 这两个基本概念之上.
 
@@ -112,7 +112,7 @@ build.gradle
 
 ### Task 依赖
 
-Task 可以依赖其他 Task, 也就是, 依赖的 Task 执行完, 然后执行自己.
+Task 可以依赖其他 Task, 也就是, 依赖的 Task 执行完, 然后执行自己, 不同 project 下的 Task 也可以依赖.
 
 	task run {
 		dependsOn hello
@@ -122,6 +122,8 @@ Task 可以依赖其他 Task, 也就是, 依赖的 Task 执行完, 然后执行�
 	// ...
 	// 或者在 build.gradle
 	// run.dependsOn hello
+	// 还可以这样
+	/// run.dependsOn {  [hello]  }
 	
 这样, 在执行 run Task 的时候, 会先执行 hello.
 
@@ -164,7 +166,7 @@ a.doLast... 被打印, 除了添加 doLast, 我们还可以设置 dependsOn, doF
 
 一个 Task 可以添加多个 doFirst 和 doLast, 并在执行该 Task 时按添加顺序执行.
 
-### Task 的一些常用 API
+### Task 常用 API
 
 
 在 project 的 build.gradle 中可以访问 project 的所有字段和方法, project 可以省略
@@ -204,12 +206,15 @@ a.doLast... 被打印, 除了添加 doLast, 我们还可以设置 dependsOn, doF
 	dependsOn(Object... c)
 	// 获取 Task 所在的 project
 	getProject()
+	// 设置 Task 超时时间, 如果任务超过这个时长任务会标记为 FAILED, 然后继续执行后面的任务
+	// 不能响应中断的 Task 设置超时无效
+	setTimeOut(long mil)
 	
 ### Task 类型
 
-不同类型的 Task 可以帮助我们完成不同的任务, 在创建 Task 的时候我们可以指定类型, 若未指定类型则默认为 DefaultTask, 在指定了
-Task 的类型后, 这个 Task 则完全复制且拥有了指定类型的 Task 的所有行为, 这与继承类似. Gradle 中预设了一些常用的类型, 我们
-创建 Task 的时候可以使用它们.
+不同类型的 Task 可以帮助我们完成不同的任务, 在创建 Task 的时候我们可以指定类型, 若未指定类型
+则默认为 DefaultTask, 在指定了Task 的类型后, 这个 Task 则完全复制且拥有了指定类型的 Task 的所
+有行为, 这与继承类似. Gradle 中预设了一些常用的类型, 我们创建 Task 的时候可以使用它们.
 
 例如 Copy 类型用于复制任务
 
@@ -225,6 +230,32 @@ Task 的类型后, 这个 Task 则完全复制且拥有了指定类型的 Task �
 	task clean(type: Delete) {
 		delete rootProject.buildDir
 	}
+
+**自定义 Task 类型**
+
+build.gradle
+
+	
+
+### Task 的执行顺序
+
+很多时候时候, Task 是需要按顺序执行的, 比如 build 一定在 clean 后运行, 在打包前验证资源文件是否
+正确, 在所有单元测试任务后生成单元测试测试报告. 决定运行顺序的两个 Task 可以没有任何依赖关系,执
+行顺序和依赖的不同就是, 顺序只决定了执行先后, 而依赖则确保了依赖的 Task 一定会执行且比被依赖的
+ Task 先执行.
+
+使 taskY 一定在 taskX 前运行:
+
+	taskX.mustRunAfter taskY
+
+除了 mustRunAfter , Task 还有一个方法 shouldRunAfter , 从方法名可开出, 它没有 mustRunAfter 那么严
+格, 那什么情况是使这个方法不生效的特例呢? 一是会导致循环的情况, 比如, taskA, taskB 相互依赖, 或者
+更多个排序形成循环. 第二种情况是使用平行任务且除 showRunAfter 外所有依赖都已满足, 当 Task 的顺序
+不是很重要的时候应该使用 shouldRunAfter.
+
+
+### 增量编译
+
 
 ## Task 的状态 
 
