@@ -28,16 +28,26 @@ DSL 是 Domain Specific Language 的缩写, 意思是领域特定语言, 但它�
 在 gradle 中, 有基于 groovy dsl 和 kotlin dsl 的两种实现, 在语法上有写不同, 这是由于 groovy 和 kotlin 
 两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似.
 
-## Task 的基本概念
+## 基本概念
 
 在 Gradle 中, 所有概念都建立在 project 和 task 这两个基本概念之上.
 
-每一个 Gradle 构建都包含一个或者多个 project, 例如在 Android 项目中, 根目录是一个项目, 内
-部还包含若干模块项目, project 代表什么取决你用 gradle 构建什么,例如一个 jar, 或者一个 
+## Project
+
+在 Gradle 中, 构建脚本所在的目录为 rootProject, 根项目可以有一个以上子 Project, 例如在 Android 项目中, 
+项目目录是一个项目, 内部还包含若干模块项目, project 代表什么取决你用 gradle 构建什么,例如一个 jar, 或者一个 
 Android 项目, 或者什么构建产物都没有, 只是为了完成某件事, Project 可以依赖其他 Project.
 
+## Task
+
 每个 Project 都包含一个或者多个 Task, Task 是 Project 的细分任务, 比如编译一些 class, 打包
-一个 Android APK, 或者清理缓存数据, 或者上传发布一个应用. Task 也可以依赖其他 Task.
+一个 Android APK, 或者清理缓存数据, 或者上传发布一个应用. 
+
+Task 也可以依赖其他 Task, 当我们执行某个 Task  的时候, 它也许依赖了很多 Task, 这些 Task 也会一并执行,
+就比如在 Android 我们执行 assembleRelease 打包 APK, 打包前必须先通过 appt 编译 layout, values 等资源文件, 
+通过 D8 编译 java 字节码文件等等任务.
+
+## 初识 Task
 
 ### 创建和运行Task
 
@@ -127,7 +137,9 @@ Task 可以依赖其他 Task, 也就是, 依赖的 Task 执行完, 然后执行�
 	
 这样, 在执行 run Task 的时候, 会先执行 hello.
 
-### 动态创建 Task
+### 动态操作 Task
+
+Task 可以在构建的任意时刻创建, 如下例所示.
 
 build.gradle
 
@@ -139,8 +151,6 @@ build.gradle
 	}
 
 在终端运行命令: gradle, 会发现, 三个 Task 成功创建
-
-### 动态操作 Task
 
 通过上面的一些案例, 你也许发现了, Task 可以动态操作, 只要能访问到该 Task, 该 Task 已经创建, 我们
 就可以直接操作该 Task 的所有属性.
@@ -254,7 +264,17 @@ build.gradle
 不是很重要的时候应该使用 shouldRunAfter.
 
 
-### 增量编译
+## Task 进阶
+
+### 增量构建
+
+**什么是增量构建?**
+
+在项目比较庞大复杂的时候, 处理各种资源文件, 编译代码等等任务通常需要耗费大量的时间, 我们不可能在仅仅
+修改了一行代码的情况下重新执行所有构建任务, 这个时候增量构建就显得尤为重要. 
+
+
+
 
 
 ## Task 的状态 
