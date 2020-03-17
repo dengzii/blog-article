@@ -1,15 +1,15 @@
 # Gradle 入门
 
-Gradle 作为一个现代的基于 JVM 构建工具, 它抛弃了 Maven 和 Ant 使用 xml 配置项目的繁琐形式,
+Gradle 作为一个现代的基于 JVM 自动化构建工具, 它抛弃了 Maven 和 Ant 使用 xml 配置项目的繁琐形式,
 使用 Groovy DSL, 或 Kotlin DSL 来配置构建项目, 它非常强大, 高可定制, 快速, 可用于构建 Java,
 Android, C++, Kotlin, JavaScript 项目, 是 Android 官方构建工具.
 
 [Gradle 官方用户引导](https://gradle.org/guides/#getting-started)
 
 在这里, 我使用 Gradle 5.6.1 作为示例, 使用 Groovy DSL 作为例子, Groovy 非常简单, 如果你还
-没有了解过, 可以查看前往 [官方文档](http://www.groovy-lang.org/syntax.html) 进行快速学习,
-建议着重学习 **Closure (闭包)** 相关的内容, 如果想要深入了解 gradle, 那么了解**元编程**的
-知识也是必要的.
+没有了解过, 可以查看前往 [官方文档](http://groovy-lang.org/documentation.html) 进行快速学习,
+建议着重学习 **Closure (闭包)** 相关的内容, 如果想要深入了解 gradle, 那么了解**元编程**的知识
+也是必要的.
 
 ## 什么是 DSL
 
@@ -25,27 +25,63 @@ DSL 是 Domain Specific Language 的缩写, 意思是领域特定语言, 但它�
 想象一下我们用 Java 去构建 Android 项目, 原本简洁的 testImplementation 'xxx' 要替换成
  project.dependencies.test.add('xxx'), 相信你能理解.
 
-在 gradle 中, 有基于 groovy dsl 和 kotlin dsl 的两种实现, 在语法上有写不同, 这是由于 groovy 和 kotlin 
-两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似.
+在 gradle 中, 有基于 groovy dsl 和 kotlin dsl 的两种项目配置声明方式, 在语法上有写不同, 这是由于
+ groovy 和 kotlin 两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似.
+
+## 什么是 Gradle
+
+Gradle 是一个开源的自动化构建工具, 非常灵活, 几乎可以构建任何类型的软件项目. 
+
+**几个特点**
+
+1. 由于在执行任务时会检查输入以及输出是否变化以及使用可选的缓存, 使得 Gradle 构建项目变的非常快.
+2. Gradle 是运行在 JVM 的. 也是用 Java 实现的, Java 程序员会比较喜欢.
+3. 可扩展性很高, 可以自定义任务, 甚至构建模型, Android 就是一个例子.
+4. 几乎所有的IDE都内置对 Gradle 的支持.
+5. 构建输出详细的 Log 可以方便快速定位构建时的问题.
+
+虽然 Gradle 功能强大, 但是使用它依旧是非常简单易用的, 我们不必花费大量的时间去学习或编写构建脚本, 
+这一点非常重要, 因为 Gradle 已经帮你一些准备工作, 它提前假设了你可能要做的事情以及构建的步骤.
 
 ## 基本概念
 
 在 Gradle 中, 所有概念都建立在 project 和 task 这两个基本概念之上.
 
-## Project
+### Project
 
-在 Gradle 中, 构建脚本所在的目录为 rootProject, 根项目可以有一个以上子 Project, 例如在 Android 项目中, 
-项目目录是一个项目, 内部还包含若干模块项目, project 代表什么取决你用 gradle 构建什么,例如一个 jar, 或者一个 
-Android 项目, 或者什么构建产物都没有, 只是为了完成某件事, Project 可以依赖其他 Project.
+在 Gradle 中, build.gradle 文件所在的目录则为一个 Project, 一个 Project 可以包含多个 Project, 最外层
+的 settings.gradle (这个文件时可选的, 当没有这个文件时表示单一项目构建, 有多个子项目需要构建则必须有
+个文件)所在的 Project 则为 RootProject, 例如在 Android 项目中, 项目目录是一个项目, 内部还包含若干模
+块项目, 每个项目目录下都有一个 build.gradle.
 
-## Task
+Project 代表什么取决你用 Gradle 构建什么,例如一个 jar, 或者一个 Android 项目, 或者什么构建产物都没有, 
+只是为了完成某件事.
 
-每个 Project 都包含一个或者多个 Task, Task 是 Project 的细分任务, 比如编译一些 class, 打包
+下面这个文件声明了三个子项目, 相对路径分别是 /projectA, /projectB, /dir1/projectC.
+
+settings.gradle
+	
+	include ':projectA', ':projectB', ':dir1:projectC'
+
+### Task
+
+每个 Project 都包含一个或者多个 Task, 每个 Task 都是为了做某件事情的细分任务, 比如编译一些 class, 打包
 一个 Android APK, 或者清理缓存数据, 或者上传发布一个应用. 
 
-Task 也可以依赖其他 Task, 当我们执行某个 Task  的时候, 它也许依赖了很多 Task, 这些 Task 也会一并执行,
+Task 由 Actions, Inputs, Outputs 三部分组成, Actions 是 Task 的细分, Inputs 表示 Task 需要操作的值, 文件,
+或者源码,目录等, Outputs 表示 Task 的产出文件, 或者目录. 这三个部分都是可选的, 这取决于你的 Task 需要做
+什么.
+
+Task 也可以依赖其他 Task, 当我们执行某个 Task  的时候, 如果他依赖了其他 Task, 这些 Task 也会一并执行,
 就比如在 Android 我们执行 assembleRelease 打包 APK, 打包前必须先通过 appt 编译 layout, values 等资源文件, 
 通过 D8 编译 java 字节码文件等等任务.
+
+**几个固定构建步骤**
+
+1. 初始化: 初始化构建环境, 确定哪些 Project 将参与构建.
+2. 配置: 创建并配置需要执行的 Task , 确定执行顺序.
+3. 执行: ...配置完就执行 Task
+
 
 ## 初识 Task
 
@@ -265,6 +301,10 @@ build.gradle
 
 
 ## Task 进阶
+
+### Task 的几种转态
+
+
 
 ### 增量构建
 
