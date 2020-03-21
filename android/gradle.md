@@ -6,8 +6,8 @@ Android, C++, Kotlin, JavaScript 项目, 是 Android 官方构建工具.
 
 [Gradle 官方用户引导](https://gradle.org/guides/#getting-started)
 
-在这里, 我使用 Gradle 5.6.1 作为示例, 使用 Groovy DSL 作为例子, Groovy 非常简单, 如果你还
-没有了解过, 可以查看前往 [官方文档](http://groovy-lang.org/documentation.html) 进行快速学习,
+在这里, 我使用 Gradle 5.6.1 作为示例, Groovy DSL 作为例子, Groovy 非常简单, 如果你还
+没有了解过, 可以前往 [官方文档](http://groovy-lang.org/documentation.html) 进行快速学习,
 建议着重学习 **Closure (闭包)** 相关的内容, 如果想要深入了解 gradle, 那么了解**元编程**的知识
 也是必要的.
 
@@ -23,20 +23,33 @@ DSL 是 Domain Specific Language 的缩写, 意思是领域特定语言, 但它�
 为了高效以及清晰的表述我们需要做的事情, 但是只是在特定的领域能够如此, 并且也只能应用于特定的领域.
 
 想象一下我们用 Java 去构建 Android 项目, 原本简洁的 testImplementation 'xxx' 要替换成
- project.dependencies.test.add('xxx'), 相信你能理解.
+ project.dependencies.test.add('xxx'), 当项目达到一定的大小, 构建脚本越来越多, 相信你能理解.
 
 在 gradle 中, 有基于 groovy dsl 和 kotlin dsl 的两种项目配置声明方式, 在语法上有写不同, 这是由于
- groovy 和 kotlin 两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似.
+ groovy 和 kotlin 两种语言的特性决定的, 但基本原理完全一样, 结构也大体上相似. 相对于 kotlin dsl, 
+ groovy 更加简洁, 但对于不熟悉 groovy 的人来说, kotlin 则更加易懂.
 
 ## 什么是 Gradle
 
+**什么是构建工具?**
+
+构建工具就是把软件项目的源码和资源通过一些工具帮我们实现自动化打包成最终的可执行应用程序的工具.
+构建工具帮我们实现编译, 合并, 下载依赖的库, 单元测试, 部署等任务, 免去我们去做一些重复简单的事.
+
+**为什么需要 Gradle**
+
+在一些简单的项目中, 比如用 Java 实现一个打印 helloworld 的程序, 这很简单, 因为中间的构建步骤非常少,
+我们只需要执行 javac 和 jar 两条命令即可打包成 jar. 但是安卓的构建步骤则非常复杂, 中间使用了 javac,
+d8, dx , ProGuard, aapt 等一系列工具进行打包, 打包步骤颇为繁琐, 如果手动则会浪费大量的时间和精力. 并
+且一旦项目形成一定的规模, 组织构建步骤, 顺序, 依赖会变得极其困难.
+
 Gradle 是一个开源的自动化构建工具, 非常灵活, 几乎可以构建任何类型的软件项目. 
 
-**几个特点**
+**Gradle 的几个特点**
 
-1. 由于在执行任务时会检查输入以及输出是否变化以及使用可选的缓存, 使得 Gradle 构建项目变的非常快.
+1. 增量构建在执行任务时会检查输入以及输出是否变化以及使用可选的缓存, 使得 Gradle 构建项目变的非常快.
 2. Gradle 是运行在 JVM 的. 也是用 Java 实现的, Java 程序员会比较喜欢.
-3. 可扩展性很高, 可以自定义任务, 甚至构建模型, Android 就是一个例子.
+3. 可扩展性很高, 可以自定义任务, 或者构建模型, Android 就是一个例子.
 4. 几乎所有的IDE都内置对 Gradle 的支持.
 5. 构建输出详细的 Log 可以方便快速定位构建时的问题.
 
@@ -281,7 +294,7 @@ a.doLast... 被打印, 除了添加 doLast, 我们还可以设置 dependsOn, doF
 
 build.gradle
 
-	
+
 
 ### Task 的执行顺序
 
@@ -302,27 +315,92 @@ build.gradle
 
 ## Task 进阶
 
-### Task 的几种转态
+### Task 的状态(执行结果)
 
+每当 Gradle 执行完一个 task, 针对执行结果会以不同的 **标签** 标记这个 task, 以下所说的执行均指的是
+task 的 actions 被执行.
 
+1. EXECUTED : 这个 task 的已经执行.
+2. UP-TO-DATE : 这个 task 的 **outputs** 没有发生改变, 前提是这个 task 有 inputs 和 outputs 并且他们没
+有发生改变.
+3. FROM-CACHE: 这个 task 的 **outputs** 使用上次构建的结果.
+4. SKIPPED: 这个 task 没有被执行
+5. NO-SOURCE: 这个 task 没有被执行, 原因是找不到 **inputs** (指定了inputs的情况下).
 
 ### 增量构建
 
 **什么是增量构建?**
 
-在项目比较庞大复杂的时候, 处理各种资源文件, 编译代码等等任务通常需要耗费大量的时间, 我们不可能在仅仅
-修改了一行代码的情况下重新执行所有构建任务, 这个时候增量构建就显得尤为重要. 
+上面说到了 Task 的五种状态, 其中部分就是与增量构建相关的, Task 的输入和产出决定了 task 是否需要执行.在
+项目比较庞大复杂的时候, 处理各种资源文件, 编译代码等等任务通常需要耗费大量的时间, 我们不可能在仅仅修改
+了一行代码的情况下重新执行所有构建任务, 这个时候增量构建就显得尤为重要. 
 
+大多数情况 task 都伴随着资源的处理, 比如将源码(inputs)编译成 class (outputs) 文件, 在上一次构建后没有改
+变的文件, 通常是不需要再次编译的.
 
+有个很关键的问题就是如何定义 inputs 和 outputs, 比如, 更改JDK的版本是否需要重新构建? jdk 的版本算不算 
+inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者 macOS 就不算. 增量构建必须在至少有一个输
+出的情况下才能正常使用.
 
+**使用增量构建**
 
+想要使用增量构建, 我们需要自定义一个 Gradle Task Type, 并告诉 Gradle 哪些属性将影响输出并标记为为输入, 哪些
+属性是最终结果并标记为输出.
 
-## Task 的状态 
+接下来看一个简单的例子
 
+	class TestTask extends DefaultTask{
+		private FileCollection imInput
+		private File imOutput
+		private Nested nested
 
+		@Nested
+		public Nested getNested() {
+			return nested
+		}
+		@InputFiles
+		public FileCollection getImInput() {
+			return imInput
+		}
+		@OutputFile
+		public File getImOutput() {
+			return imOutput
+		}
+		public void setNested(Nested nested) {
+			this.nested = nested
+		}
+		public void setImInput(FileCollection imInput) {
+			this.imInput = imInput
+		}
+		public void setImOutput(File imOutPut) {
+			this.imOutput = imOutPut
+		}
+	}
+	class Nested{
+		private String a
+		private String b
+		@Input
+		public String getA() {
+			return a
+		}
+		public void setA(String a) {
+			this.a = a
+		}
+		@Input
+		public String getB() {
+			return b
+		}
+		public void setB(String b) {
+			this.b = b
+		}
+    }
 
+在上面这个例子中, 我们使用了 Nested, OutputFile, InputFiles 三个注解表示输入和输出, 要使用增量构建, 则
+我们必须在 getter 方法上添加相应的注解, 在 Gradle 中, 支持的输入输出类型有三种, 一种是实现了 Serializable
+接口的类型, 二是文件, 三是组合值, 即一个组合其他输入输出的数据类.
 
-
+我们创建一个 task, 并且使这个 task 的 type 为 TestTask, 并给这些属性赋值, 两次执行这个 task 则会发现该 task 
+已被标记为 UP-TO-DATE, 
 
 
 
