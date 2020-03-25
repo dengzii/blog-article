@@ -290,12 +290,6 @@ a.doLast... 被打印, 除了添加 doLast, 我们还可以设置 dependsOn, doF
 		delete rootProject.buildDir
 	}
 
-**自定义 Task 类型**
-
-build.gradle
-
-
-
 ### Task 的执行顺序
 
 很多时候时候, Task 是需要按顺序执行的, 比如 build 一定在 clean 后运行, 在打包前验证资源文件是否
@@ -379,6 +373,10 @@ inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者
 	class Nested{
 		private String a
 		private String b
+		Nested(String a, String b){
+			this.a = a
+			this.b = b
+		}
 		@Input
 		public String getA() {
 			return a
@@ -397,22 +395,86 @@ inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者
 
 在上面这个例子中, 我们使用了 Nested, OutputFile, InputFiles 三个注解表示输入和输出, 要使用增量构建, 则
 我们必须在 getter 方法上添加相应的注解, 在 Gradle 中, 支持的输入输出类型有三种, 一种是实现了 Serializable
-接口的类型, 二是文件, 三是组合值, 即一个组合其他输入输出的数据类.
+接口的类型, 二是文件, 三是组合值, 即一个组合其他输入输出的数据类, 更多注解请参考 <Gradle用户手册>, 其他注解
+也都是基于这三种类型.
 
 我们创建一个 task, 并且使这个 task 的 type 为 TestTask, 并给这些属性赋值, 两次执行这个 task 则会发现该 task 
-已被标记为 UP-TO-DATE, 
+已被标记为 UP-TO-DATE.
 
+	task test(type: TestTask){
+		imInput = new File('a.txt')
+		imOutput = new File('output')
+		nested = new Nested('a', 'b')
+		v = 'a'
+		doLast{
+			println 'test execute'
+		}
+	}
 
+## Project 的概念
 
+在 Gradle 中 Project 表述了项目如何构建, 项目的所有构建属性. 一个 Project 对应一个 build.gradle 脚本, 在
+build.gradle 中, 所有的代码都属于 Project 块, 基本上所有的属性方法都是 Project 的 api, 比如我们创建 task
+时使用的 task 方法, 按住 Ctrl 点击该方法即可跳转到 Project 的对应方法上.
 
+本质上, Project 就是一堆 Task 的集合, 每个 Task 完成一个细分任务. 
 
+**Apply插件或脚本**
 
+Project 可以导入构建脚本或插件, 导入其他脚本用于拆分逻辑, 拆分公共脚本, 通过依赖插件我们可以添加远程依赖拓展功能,
+ 比如一个打包上传到 maven 的工具.
 
+	apply plugin: 'maven' // 这个是内置插件
 
+如果是非内置插件, 则还需要在 buildscript 块中添加依赖
 
+	buildscript {
+		dependencies {
+			classpath "com.example.plugin:you-plugin-id:1.0.0"
+		}
+	}
 
+**扩展属性**
 
+扩展属性可 Project 上下文中引用赋值, Task 或者子 Project, 引入的脚本中都可以使用.
 
+	apply from:'b.gradle'
+	// 定义一个名为 extraName 的扩展属性
+	project.ext.extraName = '123'
+	// 另一种定义方式 
+	//project.ext {
+	//	extraName = '1234'
+	//}
+	task A{
+		println ext.extraName
+		ext.extraName = '567'
+	}
+	// b.gradle
+	task B {
+		doLast {
+			// 依旧可以使用
+			println project.ext.extraName
+		}	
+	}
 
+**Script**
 
+当 Gradle 执行任意一个构建脚本时, 都会先将他编译成一个实现了 Script 接口的类, 这意味着我们可以访问 Script 接口
+中所有的属性和方法.
+
+## 构建生命周期
+
+项目中的所有 task 组成了一个有向无环图, task 的执行顺序则是按照有向无环图执行. 项目, task主要有三步, 初始化, 
+配置, 执行.
+
+## Gradle Daemon
+
+由于启动 Gradle 的时间比较长, 为了节约时间, Gradle 通常在首次构建的时候会启动一个守护进程(Gradle Daemon). 它会
+将项目配置缓存在内存中, 以加快我们的构建速度. 在 3.0 以上的版本中, Gradle Daemon 将会默认启用. 使用 
+gradle --status 即可看到关于守护进程的信息
+
+但守护进程启动后, 如果在后台超过3小时不活动则会关闭, 我们也可以使用 gradle --stop 命令手动关闭.
+
+默认情况下, 一个守护进程会分配 512MB 内存, 我们也可以在项目的 gradle.properties 中配置大小, 例如设置 1024MB :
+ org.gradle.jvmargs=-Xmx1024m.
 
