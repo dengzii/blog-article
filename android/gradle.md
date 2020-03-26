@@ -63,14 +63,14 @@ Gradle 是一个开源的自动化构建工具, 非常灵活, 几乎可以构建
 ### Project
 
 在 Gradle 中, build.gradle 文件所在的目录则为一个 Project, 一个 Project 可以包含多个 Project, 最外层
-的 settings.gradle (这个文件时可选的, 当没有这个文件时表示单一项目构建, 有多个子项目需要构建则必须有
+的 settings.gradle (这个文件时可选的, 当没有这个文件时表示单一项目构建, 有多个SubProject需要构建则必须有
 个文件)所在的 Project 则为 RootProject, 例如在 Android 项目中, 项目目录是一个项目, 内部还包含若干模
-块项目, 每个项目目录下都有一个 build.gradle.
+块项目.
 
 Project 代表什么取决你用 Gradle 构建什么,例如一个 jar, 或者一个 Android 项目, 或者什么构建产物都没有, 
 只是为了完成某件事.
 
-下面这个文件声明了三个子项目, 相对路径分别是 /projectA, /projectB, /dir1/projectC.
+下面这个文件声明了三个SubProject, 相对路径分别是 /projectA, /projectB, /dir1/projectC.
 
 settings.gradle
 	
@@ -100,8 +100,8 @@ Task 也可以依赖其他 Task, 当我们执行某个 Task  的时候, 如果�
 
 ### 创建和运行Task
 
-我们在任意一空文件夹创建一个 build.gradle. 每一个项目下都有一个 build.gradle , 这个文件必
-须有且必须是这个文件名, 我们在 build.gradle 中创建一个 Task.
+我们在任意一空文件夹创建一个 build.gradle, 这代表一个 Project 的入口, 必须是这个文件名, 我们在 build.gradle
+中创建一个 Task, 如下代码.
 
 build.gradle
 
@@ -125,12 +125,11 @@ build.gradle
 	> Task :hello
 	Hi, gradle
 	
-执行 Task 的语法是 gradle TaskPath, 路径以 : 分隔, 比如 A 项目下的 C Task 则表示为 :A:C, 
-当该 Task 在当前项目下时, 即路径为 :taskName 时, 冒号可省略.
+执行 Task 的命令是 gradle TaskPath, 路径以 : 分隔, 比如 A 项目下的 C Task 则表示为 :A:C.
 
 ### Task的结构
 
-在上面的例子中, 为什么要写在 doFirst 里呢, 这与 Task 内部执行顺序有关系 doFirst 表示最先执行
+在上面的例子中, 为什么要写在 doFirst 里呢, 这与 Task 执行顺序有关系, doFirst 表示最先执行
 这个块的代码, doLast 则表示最后执行, 而写在 Task 块中的则是配置该项目时执行的, 看下面的例子.
 
 build.gradle 
@@ -306,19 +305,18 @@ a.doLast... 被打印, 除了添加 doLast, 我们还可以设置 dependsOn, doF
 更多个排序形成循环. 第二种情况是使用平行任务且除 showRunAfter 外所有依赖都已满足, 当 Task 的顺序
 不是很重要的时候应该使用 shouldRunAfter.
 
-
 ## Task 进阶
 
 ### Task 的状态(执行结果)
 
-每当 Gradle 执行完一个 task, 针对执行结果会以不同的 **标签** 标记这个 task, 以下所说的执行均指的是
-task 的 actions 被执行.
+每当 Gradle 执行完一个 task, 针对执行结果会以不同的标签标记这个 task, 以下所说的执行均指的是 task 
+的 actions 被执行.
 
 1. EXECUTED : 这个 task 的已经执行.
 2. UP-TO-DATE : 这个 task 的 **outputs** 没有发生改变, 前提是这个 task 有 inputs 和 outputs 并且他们没
 有发生改变.
 3. FROM-CACHE: 这个 task 的 **outputs** 使用上次构建的结果.
-4. SKIPPED: 这个 task 没有被执行
+4. SKIPPED: 这个 task 没有被执行, 设置了 enable = false
 5. NO-SOURCE: 这个 task 没有被执行, 原因是找不到 **inputs** (指定了inputs的情况下).
 
 ### 增量构建
@@ -333,15 +331,45 @@ task 的 actions 被执行.
 变的文件, 通常是不需要再次编译的.
 
 有个很关键的问题就是如何定义 inputs 和 outputs, 比如, 更改JDK的版本是否需要重新构建? jdk 的版本算不算 
-inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者 macOS 就不算. 增量构建必须在至少有一个输
-出的情况下才能正常使用.
+inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者 macOS 就不算. 另外增量构建必须在至少有
+一个输出的情况下才能正常工作.
+
+**buildSrc**
+
+为了方便编写和组织我们的自定义构建逻辑, 我们需要在项目根目录新建一个目录:
+	
+	/yourProject
+	    ....
+	    /buildSrc
+	        /src/main/groovy/
+	            ...
+	        build.gradle
+
+buildSrc/build.gradle
+
+	repositories {
+		google()
+		jcenter()
+	}
+	apply {
+		plugin 'groovy'
+		plugin 'java-gradle-plugin'
+	}
+	dependencies {
+		implementation gradleApi()
+		implementation localGroovy()
+		implementation "commons-io:commons-io:2.6"
+	}
+
+在这个目录中的代码可以在我们项目的任意脚本中访问(6.0之后无法再settings.gradle中访问).
 
 **使用增量构建**
 
-想要使用增量构建, 我们需要自定义一个 Gradle Task Type, 并告诉 Gradle 哪些属性将影响输出并标记为为输入, 哪些
-属性是最终结果并标记为输出.
+想要使用增量构建, 我们需要自定义一个 Gradle Task Type, 这个 Task 可以继承 DefaultTask , 
+或者继承已存在的 Task, 比如 Copy, 然后告诉 Gradle 哪些属性将影响输出并标记为为输入, 哪些
+属性是最终结果并标记为输出. 然后我们再写一个 Task 指定它的 type 为我们自己定义的类型.
 
-接下来看一个简单的例子
+接下来看一个简单的例子:
 
 	class TestTask extends DefaultTask{
 		private FileCollection imInput
@@ -411,22 +439,56 @@ inputs? jdk 的版本会影响输出 class, 所以算. 但是使用 win10 或者
 		}
 	}
 
+### 执行 Task
+
+一般情况, 我们会使用绝对路径指定需要执行的 Task, 例如在 projectA 下的 uploadRelease.
+
+	gradle :projectA:uploadRelease
+
+以上是一般情况, 但是一些情况下我们需要执行多个项目中的同名的 Task, 比如 projectA 和 projectB 都需要执行 
+uploadRelease, 这时我们即可以省略路径.
+
+	gradle uploadRelease
+
+如果嫌 uploadRelease 太长, 你甚至可以这样
+	
+	gradle uR
+	// 或者这样
+	// gradle up
+
+第一种是使用驼峰命名法时每个单词的开头, 第二种是匹配 task 名的开头
+
+**在 SubProject下执行命令**
+
+如果在根项目中执行非绝对路径的 Task, 则所有名字匹配的 Task 都会执行, 但我们可以转到需要执行的 task 的 subproject
+中执行命令, 则只会执行该 subproject 的匹配 task. 需要注意的是, 在 subproject 中执行 task, 除了不用指定绝对路径, 
+其他过程与在 rootProject 中执行没有差别, 构建步骤不会因此改变.
+
 ## Project 的概念
 
 在 Gradle 中 Project 表述了项目如何构建, 项目的所有构建属性. 一个 Project 对应一个 build.gradle 脚本, 在
-build.gradle 中, 所有的代码都属于 Project 块, 基本上所有的属性方法都是 Project 的 api, 比如我们创建 task
-时使用的 task 方法, 按住 Ctrl 点击该方法即可跳转到 Project 的对应方法上.
+build.gradle 中, 所有的代码都属于 Project Configure 块, 在 build.gradle 中的代码将在 Project 配置阶段执行.
+另外, build.gradle 或其引入的其他脚本中, 已在 Project 的作用域内, 默认我们可以不带前缀直接引用 Project 的
+方法或者属性, 比如我们创建 task 时使用的 task 方法, 按住 Ctrl 点击该方法即可跳转到源码中 Project 的对应方法上.
 
 本质上, Project 就是一堆 Task 的集合, 每个 Task 完成一个细分任务. 
 
-**Apply插件或脚本**
+**获取一个Project**
+	
+	public Project project(String path);
 
-Project 可以导入构建脚本或插件, 导入其他脚本用于拆分逻辑, 拆分公共脚本, 通过依赖插件我们可以添加远程依赖拓展功能,
+### Apply插件或脚本
+
+Project 可以导入构建脚本或插件, 导入其他脚本用于拆分逻辑, 拆分公共脚本. 通过依赖插件我们可以添加远程依赖拓展功能,
  比如一个打包上传到 maven 的工具.
 
+	// apply from: 'a.gradle' // 导入其他脚本
 	apply plugin: 'maven' // 这个是内置插件
 
-如果是非内置插件, 则还需要在 buildscript 块中添加依赖
+当 Gradle 执行任意一个构建脚本时, 都会先将他编译成一个实现了 Script 接口的类, 并且该脚本内代码都在 Script 的作用域内,
+我们可以访问 Script 接口中所有的属性和方法, 例如 apply 导入其他脚本, delete 删除文件, mkdir 新建文件夹.
+
+导入插件时, 如果是非内置插件, 则还需要在 buildscript 块中添加依赖, buildscript 块中的代码会在 apply 块之前执行.
 
 	buildscript {
 		dependencies {
@@ -434,9 +496,9 @@ Project 可以导入构建脚本或插件, 导入其他脚本用于拆分逻辑,
 		}
 	}
 
-**扩展属性**
+### 扩展属性
 
-扩展属性可 Project 上下文中引用赋值, Task 或者子 Project, 引入的脚本中都可以使用.
+扩展属性可定义该扩展属性的 Project 的作用域中读写, Task 或者子 Project, 引入的脚本中都可以使用.
 
 	apply from:'b.gradle'
 	// 定义一个名为 extraName 的扩展属性
@@ -456,16 +518,125 @@ Project 可以导入构建脚本或插件, 导入其他脚本用于拆分逻辑,
 			println project.ext.extraName
 		}	
 	}
+	
+### 几个实用的 API
 
-**Script**
+**project.allprojects**
 
-当 Gradle 执行任意一个构建脚本时, 都会先将他编译成一个实现了 Script 接口的类, 这意味着我们可以访问 Script 接口
-中所有的属性和方法.
+这个方法可以遍历所有 Project, 另外还有一个 subprojects 方法用于遍历所有SubProject, 如果我们想快速给所有 Project 
+添加一个相同的 Task, 则需要用到它.
 
-## 构建生命周期
+	allprojects {
+		println it
+		beforeEvaluate {
+			println 'project evaluate ' + it.name
+		}
+	}
+
+这个例子将在所有 project 配置前打印名字.
+
+**project.buildscript**
+
+
+
+**project.configure**
+
+添加配置代码到 project
+
+	// 给单个 Project 添加
+	void configure(Closure c)
+	// 给多个添加
+	void configure(Iterator<?> i, Closure c)
+
+**project.dependencies**
+
+
+
+## 构建顺序
+
+### 简介
 
 项目中的所有 task 组成了一个有向无环图, task 的执行顺序则是按照有向无环图执行. 项目, task主要有三步, 初始化, 
 配置, 执行.
+
+**1. 初始化**
+
+这个阶段, 首先配置执行全局初始化脚本(GRADLE_HOME/init.d, 如果有), 然后导入项目的 gradle.properties 文件中的
+值(如果有).
+
+然后如果存在 settings.gradle 文件, 则表示这是一个多项目构建, 执行这个脚本, 导入其中配置的项目.
+
+**2. 配置**
+
+在 Project 配置阶段, 代码从上往下执行(导入其他脚本则也是), 但 buildscript 块除外, 这个块一般用于配置 classpath,
+会在配置阶段最先执行. 
+
+Project 中的 Task 也是从上往下按顺序执行 task 的 configure closure.
+
+**3. 执行**
+
+如果我们指定了一个任务执行或者指定了 defaultTasks, 则这个阶段开始执行 task
+
+### 监听project和Task
+
+构建脚本中, 我们可以为构建添加监听.
+
+**Project**
+
+Project 有两个可以监听的接口, afterEvaluate 和 beforeEvaluate, 分别可以监听 project 构建开始和结束.
+
+build.gradle
+
+	allprojects {
+		beforeEvaluate { p ->
+			println "${p.name} beforeEvaluate"
+		}
+		afterEvaluate { p ->
+			println "${p.name} afterEvaluate"
+		}
+	}
+
+**Task**
+
+同样的 Task 也可以.
+
+	// task 被添加(配置完毕)
+	tasks.whenTaskAdded {
+		println name
+	}
+	// task 执行后
+	gradle.taskGraph.afterTask {
+        println it
+    }
+	// task 执行前
+    gradle.taskGraph.beforeTask {
+        println it
+    }
+	// 所有 Task 都配置完毕
+	gradle.taskGraph.whenReady {
+		println "All Task Ready"
+	}
+
+### 监听Gradle构建
+
+Gradle 对象定义了许多对 Gradle 的方法, 我们可以通过 project.gradle 获取该对象. 下面这个例子用它来监听构建过程.
+
+	// settings.gradle 中的 project 被加载时调用
+	gradle.projectsLoaded {
+		println "projectsLoaded $it"
+	}
+	// project 配置完毕
+	gradle.afterProject {
+		println "afterProject $it"
+	}
+	// project 配置前
+	gradle.beforeProject {
+		println "beforeProject $it"
+	}
+	// 所有构建完成
+	gradle.buildFinished {
+		println "buildFinished $it"
+	}
 
 ## Gradle Daemon
 
