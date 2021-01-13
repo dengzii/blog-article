@@ -1,1 +1,0 @@
-从源码出发, 了解 Android 消息机制中的 Looper, MessageQueue, Handler.
