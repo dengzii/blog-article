@@ -1,0 +1,41 @@
+{{ import "./template_header.jet" }}
+{{ import "./template_footer.jet" }}
+{{ import "./template_head.jet" }}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" content="text/html">
+    <meta name="keywords" content="{{ .Info.Keywords }}">
+    <meta name="description" content="{{ .Info.Desc }}"/>
+    <title>{{ .Info.Title }}</title>
+    {{ yield head() }}
+</head>
+<body>
+<div>
+    {{ yield header() }}
+    <div class="main">
+        <ul>
+            {{ range friend := .Friends }}
+            <li class="friend">
+                <div>
+                    <div class="friend-avatar">
+                        <img src="{{ friend.Avatar }}" alt="avatar">
+                    </div>
+                    <div class="friend-info">
+                            <a class="friend-name" href="{{ friend.Url }}" target="_blank">{{ friend.Name }}</a>
+                            <small>{{ friend.Description }}</small>
+                    </div>
+                </div>
+            </li>
+            {{ else }}
+            <li>No friends yet.</li>
+            {{ end }}
+        </ul>
+    </div>
+    <div class="footer">
+        {{ yield footer() }}
+    </div>
+</div>
+</body>
+</html>
