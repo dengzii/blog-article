@@ -3,9 +3,51 @@
     {
       "Name": "邓尘锋",
       "Url": "https://surest.cn/",
-      "Avatar": "-",
-      "Email": "email@example.com",
-      "Description": "-"
-    }
+      "Avatar": "https://avatars3.githubusercontent.com/u/29169847?s=460&v=4",
+      "Email": "-",
+      "Description": "PHP程序猿"
+    },
+	{
+      "Name": "XH博客",
+      "Url": "http://wp.26hx.cn/",
+      "Avatar": "http://wp.26hx.cn/wp-content/uploads/2019/10/8HTM6XF2MMXEPIKXXF-e1571286864148.jpg",
+      "Email": "-",
+      "Description": "XHXH博客"
+    },
+	{
+      "Name": "纤月",
+      "Url": "http://blog.tuwq.cn/",
+      "Avatar": "http://blog.img.tuwq.cn/upload/user/avatar/11E68E08859F3D3ED8123CA35AB08B6F.jpg",
+      "Email": "-",
+      "Description": "我好菜啊"
+    },
+	{
+      "Name": "会打篮球的程序猿",
+      "Url": "http://www.lzhpo.com/",
+      "Avatar": "https://www.lzhpo.com/img/tx.jpg",
+      "Email": "-",
+      "Description": "主要分享微服务、系统架构、大数据、前端等相关的知识研究和学习资料。"
+    },
+	{
+      "Name": "小谢在努力",
+      "Url": "https://www.xxc520.cn/",
+      "Avatar": "https://s3.ax1x.com/2020/12/23/r6XIns.jpg",
+      "Email": "-",
+      "Description": "码农! 社畜!"
+    },
+	{
+      "Name": "FindHao",
+      "Url": "https://www.findhao.net",
+      "Avatar": "https://avatars3.githubusercontent.com/u/3823240",
+      "Email": "-",
+      "Description": "科研工作者的自白"
+    },
+	{
+      "Name": "不才的博客",
+      "Url": "https://www.notbucai.com/",
+      "Avatar": "https://image.notbucai.com/logo.png",
+      "Email": "-",
+      "Description": "一般程序猿"
+    },
   ]
 }
