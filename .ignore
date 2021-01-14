@@ -1,5 +1,6 @@
 /art/
 /static/
+/template/
 /ignored_dir/
 /.git/
 ignore-article.md
