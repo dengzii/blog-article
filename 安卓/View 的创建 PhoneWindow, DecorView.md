@@ -1,10 +1,10 @@
 
-在 Android App中, 所有的数据内容都是通过 View 展示给用户的, Android 通过一系列机制和流程将这些承载着各种交互控件和展示数据的 View 展示出来. 
-在开发中, 我们也经常需要用到自定义 view, 因此, 我们非常有必要学习一下 view 的创建流程, 
+在 Android App中, 所有的数据内容都是通过 View 展示给用户的, Android 通过一系列机制和流程将这些承载着各种交互控件和展示数据的 View 展示出来.
+在开发中, 我们也经常需要用到自定义 view, 因此, 我们非常有必要学习一下 view 的创建流程,
 本文从源码出发, 循序渐进介绍了了 Activity, PhoneWindow, DecorView 的关系, 是如何一一步步创建关联的.
 
 ## 一. Activity
----
+
 注意, AppCompatActivity 是有所区别的.
 
 通常一个 App 是有许多 Activity 组成的， 我们在创建一个 Activity 的时候, 通常首先就是重写 onCraete 方法并调用 setContentView 传入相应的布局资源, 用于加载相应的 XML 布局文件,
@@ -12,7 +12,7 @@
  中则包含了 ActionBar, 和我们的 XML 布局了, 他们的结构大致如下图所示
 
         Android UI 层级
-    
+
     |--------------------|
     |    Activity         |
     |--------------------|
@@ -25,7 +25,7 @@
     |    |ContentView|    |
     |                     |
     |--------------------|
-    
+
 
 *Activity.setContentView*
 
@@ -36,7 +36,7 @@
 
 首先, 它调用了 Window.setContentView, 这个 Window 就是 PhoneWindow 了, Activity 中我们看到的 View 都封装在这个类中.
 
-接着初始化 ActionBar 
+接着初始化 ActionBar
 
     private void initWindowDecorActionBar() {
         Window window = getWindow();
@@ -65,8 +65,8 @@
 
 由此可见, Activity 直接参与用户界面绘制并不多.
 
-## 二.PhoneWindow 
----
+## 二.PhoneWindow
+
 Window 代表着一个抽象窗口, PhoneWindow 是 Window 的具体实现, 且只有 PhoneWindow 这一个实现类, Window 并不具备 View 的一些特性, 比如可见, 长宽高这些. 正如它的类名, 它代表着 App 中一个窗口的抽象, 它控制着一些和窗口相关的操作, 和包含着
 一些窗口的属性, 比如, 过度动画的绘制, 管理菜单, 标题, 以及它拥有的一个重要成员变量 DecorView.
 
@@ -104,7 +104,7 @@ PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 
                     r.mPendingRemoveWindowManager = null;
                 }
                 appContext.setOuterContext(activity);
-				// 初始化 Activity 相关的内容, Activity 的这个方法中关联了 window 
+				// 初始化 Activity 相关的内容, Activity 的这个方法中关联了 window
                 activity.attach(appContext, this, getInstrumentation(), r.token,
                         r.ident, app, r.intent, r.activityInfo, title, r.parent,
                         r.embeddedID, r.lastNonConfigurationInstances, config,
@@ -135,9 +135,9 @@ PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 
 			...
             Window window, ActivityConfigCallback activityConfigCallback) {
         attachBaseContext(context);
-        
+
         mFragments.attachHost(null /*parent*/);
-        
+
         mWindow = new PhoneWindow(this, window, activityConfigCallback);
         mWindow.setWindowControllerCallback(this);
         mWindow.setCallback(this);
@@ -150,9 +150,9 @@ PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 
             mWindow.setUiOptions(info.uiOptions);
         }
         mUiThread = Thread.currentThread();
-        
+
         ...
-        
+
         mWindow.setWindowManager(
                 (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),
                 mToken, mComponent.flattenToString(),
@@ -168,7 +168,7 @@ PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 
 
 这就很清晰了, 在这初始化了 PhoneWindow 和 WindowManager, 并且关联到该 Activity, 在 ActivityThread 初始化完 Activity 后, 就调用 Activity 的 onCreate 方法了.
 
-我们顺着 Activity 源码中的 getWindow().setContentView(layoutResID) 这行代码找到PhoneWindow 中的 setContentView, 在这个方法中, 
+我们顺着 Activity 源码中的 getWindow().setContentView(layoutResID) 这行代码找到PhoneWindow 中的 setContentView, 在这个方法中,
 
 *PhoneWindow.setContentView*
 
@@ -195,7 +195,7 @@ PhoneWindow 伴随着 Activity 的创建而创建, 而 ActivityThread 掌握着 
         }
         mContentParentExplicitlySet = true;
     }
-    
+
 阅读上面代码可知, mContentParent 就是装载我们所有内容的根容器(ViewGroup)了. 在这里, 最关键的代码就是 mLayoutInflater.inflate(layoutResID, mContentParent) , 它就是填充我们的布局的代码了.
 
 installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化了比如标题,icon, logo, 是否全屏等该 window 的一些基础属性, 这些属性我们都可以在 style 中定义, 例如 WindowNoTitle, 设置该 Activity 没有标题.
@@ -203,7 +203,7 @@ installDecor 这个方法中, 初始化了 DecorView, mContentParent, 初始化�
 事实上,不止 Activity, 还有 Dialog, Toast 都对应着一个 Window.
 
 ## 三. PhoneWindow 中的 DecorView
----
+
 DecorView 是承载视图的根布局, 它继承于 FrameLayout, 是 PhoneWindow 的一个成员变量, 因此可以通过 Window.getDecorView() 获取它.
 
 由于在 PhoneWindow.setContentView 这个方法中初始化了 DecorView, 粗略看看
@@ -251,7 +251,7 @@ DecorView 是承载视图的根布局, 它继承于 FrameLayout, 是 PhoneWindow
     }
 
 这个方法就是用于生成 DecorView, 内容比较简单.
- 
+
 *PhoneWindow.generateDecor*
 
     protected DecorView generateDecor(int featureId) {
@@ -273,14 +273,14 @@ DecorView 是承载视图的根布局, 它继承于 FrameLayout, 是 PhoneWindow
         return new DecorView(context, featureId, this, getAttributes());
     }
 
-而 generateLayout 这个方法, 做的工作就稍微多一些, 
+而 generateLayout 这个方法, 做的工作就稍微多一些,
 
 	protected ViewGroup generateLayout(DecorView decor) {
         // Apply data from current theme.
 		// 获取当前 window 的 主题
         TypedArray a = getWindowStyle();
 		... // 初始化样式, 例如 windowNoTitle, windowActionBar, windowIsTranslucent, windowSoftInputMode 等等
-		
+
 		mDecor.startChanging();
         mDecor.onResourcesLoaded(mLayoutInflater, layoutResource);
 		... //设置 windowBackground, title, titleColor 等
@@ -289,7 +289,7 @@ DecorView 是承载视图的根布局, 它继承于 FrameLayout, 是 PhoneWindow
 
         return contentParent;
 	}
-		
+
 
 阅读installDecor这个方法的代码, 了解到在这个方法中生成了 DecorView, 顶级ViewGroup contentParent, 设置了 Window 标题, 设置了背景色前景色, 初始化了动画等等基础重要操作...
 
@@ -329,7 +329,7 @@ DocorView 中还有 ActionBar , 再看看他是如何成的, 我们之前分析�
         init(decor);
 		...
     }
-	
+
 	private void init(View decor) {
 		...
 		// 这个就是我们的 ActionBar 的布局了
@@ -343,10 +343,9 @@ DocorView 中还有 ActionBar , 再看看他是如何成的, 我们之前分析�
 		...
 	}
 
-在这个 init 方法中, 
+在这个 init 方法中,
 
 ## 总结
----
 
 + 1,在 ActivityThread 的 performLaunchActivity 中, 创建了 PhoneWindow 并调用了 Activity 的 attach 方法
 + 2,在 Activity 的 attach 方法中, 关联了 PhoneWindow
@@ -355,18 +354,3 @@ DocorView 中还有 ActionBar , 再看看他是如何成的, 我们之前分析�
 + 5,在 Activity 的 initWindowDecorActionBar 中, 初始化了 ActionBar
 
 (完)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
