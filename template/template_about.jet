@@ -14,7 +14,7 @@
     {{ yield header() }}
     <div class="main">
         <div class="about">
-            {{ .About }}
+            {{ raw: .About }}
         </div>
     </div>
     <div class="footer">
