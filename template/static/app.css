@@ -120,9 +120,9 @@ ul {
 .article-content {
     max-width: 1000px;
 }
-
-.article-content > img {
+.article-content img {
     max-width: 1000px;
+    margin: 20px 0;
 }
 
 .article-info {
