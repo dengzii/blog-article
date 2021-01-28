@@ -1,6 +1,7 @@
 {
   "title": "dengzi's blog",
   "Keywords": "dengzii, android, java, go, 前端, dengzii's blog, 凳子的博客",
+  "Desc": "世界上只有一种英雄主义， 那就是在了解生活的真相之后依然热爱生活。",
   "Favicon": "/static/favicon.icon",
-  "Bio": "life is short, just code it."
+  "Bio": "talk is cheap, show me the code."
 }
