@@ -24,6 +24,7 @@
                     </div>
                     <div class="friend-info">
                             <a class="friend-name" href="{{ friend.Url }}" target="_blank">{{ friend.Name }}</a>
+                            <br>
                             <small>{{ friend.Description }}</small>
                     </div>
                 </div>
