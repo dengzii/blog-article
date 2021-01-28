@@ -89,7 +89,6 @@ ul {
     width: 64px;
     height: 64px;
     border-radius: 6px;
-    background-color: #c7c7c7;
 }
 
 .friend-avatar > img {
@@ -100,17 +99,15 @@ ul {
 }
 
 .friend-info {
-    display: inline-block;
-    margin: 8px 32px;
+    margin: 0 8px 0 84px;
 }
 
 .friend-info > a {
-    display: block;
-    line-height: 22px;
+    line-height: 32px;
 }
 
 .friend-info > small {
-    display: block;
+
 }
 
 .about {
