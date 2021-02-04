@@ -37,7 +37,7 @@ func LoginHandlerFunc(ctx *gin.Context) {
 
 ```go
 import (
-	github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 )
 
 var v = validator.New()
@@ -224,4 +224,130 @@ func proxyHandlerFunc(ctx *gin.Context, handlerFunc interface{}){
 
 **性能优化**
 
-GO 的反射对性能的影响是巨大的, 因此应尽量避免在 HandleFunc 中使用反射, 以上功能使用反射和不使用耗时相差约300倍. 所以, 部分 `Type`, `Value` 可以在注册路由时进行反射, 提前反射, 就避免了每次使用都反射. 
+GO 的反射对性能的影响是巨大的, 因此应尽量避免在 HandleFunc 中使用反射, 以上功能使用反射和不使用耗时相差约300倍. 所以, 部分 `Type`, `Value` 可以在注册路由时进行反射, 提前反射, 就避免了每次使用都反射.
+
+如下所示, 我们对真实 handlerFunc, 以及参数类型进行提前反射.
+
+```go
+func GetHandlerFunc(handlerFunc interface{}) func(*gin.Context) {
+	// 提前反射
+	paramNum := reflect.TypeOf(handlerFunc).NumIn()
+	funcValue := reflect.ValueOf(handlerFunc)
+	funcType := reflect.TypeOf(handleFunc)
+	paramType := funcType.In(1).Elem()
+
+	// 判断是否 Func
+	if funcType.Kind() != reflect.Func {
+		panic("the route handlerFunc must be a function")
+	}
+	// ... 还可以做一些其他校验确保无误
+	return func(context *gin.Context){
+		// 只有一个参数说明是未重构的 HandlerFunc
+		if paramNum == 1 {
+				funcValue.Call(valOf(context))
+				return
+		}
+		proxyHandlerFunc(context, funcValue, paramType)
+	}
+}
+
+func proxyHandlerFunc(ctx *gin.Context, funcValue reflect.Value, typeParam reflect.Type){
+	// 创建实例
+	param := reflect.New(typeParam).Interface()
+	// ...
+	// 调用真实 HandlerFunc
+	reflect.Call(valOf(ctx, param))
+}
+
+func valOf(i ...interface{}) []reflect.Value {
+	var rt []reflect.Value
+	for _, i2 := range i {
+		rt = append(rt, reflect.ValueOf(i2))
+	}
+	return rt
+}
+```
+
+## 性能测试
+
+使用 Baenchmark 进行性能测试.
+
+```go
+func BenchmarkNormalHandleFunc(b *testing.B) {
+	router := gin.New()
+	router.POST("login", func(ctx *gin.Context) {
+		p := validates.RegisterParams{}
+		validator := LoginParam{}
+		if !validator.Validate(wrap.Context(ctx), &p) {
+			return
+		}
+	})
+	config.Router = router
+	go func() {
+		_ = router.Run(":8081")
+	}()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		testPost("8081")
+	}
+}
+func BenchmarkReflectHandleFunc(b *testing.B) {
+	router := gin.New()
+	handlerFunc := func(ctx *gin.Context, params *LoginParam) {
+		//...
+	}
+	router.POST("login", GetHandlerFunc(handleFunc))
+	go func() {
+		_ = router.Run(":8082")
+	}()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		testPost("8082")
+	}
+}
+
+func testPost(port string) {
+	params := struct {
+		Account  string
+		Password string
+		Email    string
+		Captcha  string
+	}{
+		Account:  "account",
+		Password: "1231ljasd",
+		Email:    "email@exmpale.com",
+		Captcha:  "12345",
+	}
+	paramsByte, _ := json.Marshal(params)
+	r, _ := http.Post("http://127.0.0.1:"+port+"/login", "application/json", bytes.NewReader(paramsByte))
+
+	if r.StatusCode != 200 {
+		fmt.Println("errr")
+	}
+}
+```
+
+测试结果如下.
+
+```text
+E:\go> go test -bench="." -count=5 -benchmem
+goos: windows
+goarch: amd64
+pkg: go
+BenchmarkNormalHandleFunc-12               19603             59545 ns/op            7321 B/op         83 allocs/op
+BenchmarkNormalHandleFunc-12               17412             66923 ns/op            7306 B/op         83 allocs/op
+BenchmarkNormalHandleFunc-12               20368             57849 ns/op            7349 B/op         83 allocs/op
+BenchmarkNormalHandleFunc-12               20542             60086 ns/op            7395 B/op         83 allocs/op
+BenchmarkNormalHandleFunc-12               20577             58671 ns/op            7361 B/op         83 allocs/op
+BenchmarkReflectHandleFunc-12              20613             58374 ns/op            7493 B/op         85 allocs/op
+BenchmarkReflectHandleFunc-12              20230             62594 ns/op            7456 B/op         85 allocs/op
+BenchmarkReflectHandleFunc-12              19764             59617 ns/op            7441 B/op         85 allocs/op
+BenchmarkReflectHandleFunc-12              20684             58899 ns/op            7461 B/op         85 allocs/op
+BenchmarkReflectHandleFunc-12              19796             58712 ns/op            7421 B/op         85 allocs/op
+PASS
+ok      go    18.177s
+```
+
+性能几乎没有损耗.
