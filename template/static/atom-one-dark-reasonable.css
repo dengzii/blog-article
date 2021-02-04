@@ -1,75 +1,79 @@
-/*
+/**
+ * GitHub Gist Theme
+ * Author : Anthony Attard - https://github.com/AnthonyAttard
+ * Author : Louis Barranqueiro - https://github.com/LouisBarranqueiro
+ */
 
-Atom One Dark With support for ReasonML by Gidi Morris, based off work by Daniel Gamage
-
-Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
-
-*/
 .hljs {
   display: block;
-  overflow-x: auto;
+  background: white;
   padding: 0.5em;
-  color: #abb2bf;
-  background: #282c34;
+  color: #333333;
+  overflow-x: auto;
 }
-.hljs-keyword, .hljs-operator {
-  color: #F92672;
+
+.hljs-comment,
+.hljs-meta {
+  color: #969896;
 }
-.hljs-pattern-match {
-  color: #F92672;
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-strong,
+.hljs-emphasis,
+.hljs-quote {
+  color: #df5000;
 }
-.hljs-pattern-match .hljs-constructor {
-  color: #61aeee;
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-type {
+  color: #d73a49;
 }
-.hljs-function {
-  color: #61aeee;
+
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-attribute {
+  color: #0086b3;
 }
-.hljs-function .hljs-params {
-  color: #A6E22E;
+
+.hljs-section,
+.hljs-name {
+  color: #63a35c;
 }
-.hljs-function .hljs-params .hljs-typing {
-  color: #FD971F;
+
+.hljs-tag {
+  color: #333333;
 }
-.hljs-module-access .hljs-module {
-  color: #7e57c2;
+
+.hljs-title,
+.hljs-attr,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #6f42c1;
 }
-.hljs-constructor {
-  color: #e2b93d;
+
+.hljs-addition {
+  color: #55a532;
+  background-color: #eaffea;
 }
-.hljs-constructor .hljs-string {
-  color: #9CCC65;
+
+.hljs-deletion {
+  color: #bd2c00;
+  background-color: #ffecec;
 }
-.hljs-comment, .hljs-quote {
-  color: #b18eb1;
-  font-style: italic;
-}
-.hljs-doctag, .hljs-formula {
-  color: #c678dd;
-}
-.hljs-section, .hljs-name, .hljs-selector-tag, .hljs-deletion, .hljs-subst {
-  color: #e06c75;
-}
-.hljs-literal {
-  color: #56b6c2;
-}
-.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta-string {
-  color: #98c379;
-}
-.hljs-built_in, .hljs-class .hljs-title {
-  color: #e6c07b;
-}
-.hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-type, .hljs-selector-class, .hljs-selector-attr, .hljs-selector-pseudo, .hljs-number {
-  color: #d19a66;
-}
-.hljs-symbol, .hljs-bullet, .hljs-link, .hljs-meta, .hljs-selector-id, .hljs-title {
-  color: #61aeee;
-}
-.hljs-emphasis {
-  font-style: italic;
-}
-.hljs-strong {
-  font-weight: bold;
-}
+
 .hljs-link {
   text-decoration: underline;
+}
+
+.hljs-number {
+  color: #005cc5;
+}
+
+.hljs-string {
+  color: #032f62;
 }
