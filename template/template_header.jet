@@ -5,8 +5,6 @@
         <ul>
             <li><small><a href="/index.html">Posts</a></small></li>
             {*      <li><small><a href="/category.html">Category</a></small></li>*}
-            <li><small><a href="/about.html">About</a></small></li>
-            <li><small><a href="/friends.html">Friends</a></small></li>
         </ul>
     </div>
 {{ end }}
